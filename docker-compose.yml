@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: sparkpretty-api
+    restart: unless-stopped
+    ports:
+      - '5000:5000'
+    env_file:
+      - ./backend/.env
+    volumes:
+      - uploads:/app/uploads
+    networks:
+      - sparkpretty
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:5000/api/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api
+    container_name: sparkpretty-web
+    restart: unless-stopped
+    ports:
+      - '80:80'
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - sparkpretty
+
+  mongo:
+    image: mongo:7
+    container_name: sparkpretty-db
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - sparkpretty
+
+volumes:
+  mongo_data:
+  uploads:
+
+networks:
+  sparkpretty:
+    driver: bridge

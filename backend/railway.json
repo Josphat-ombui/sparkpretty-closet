@@ -1,0 +1,8 @@
+{
+  "name": "sparkpretty-closet-backend",
+  "type": "git",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "start": "node server.js"
+}

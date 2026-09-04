@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-rgb: 255, 182, 193;
+  --primary-dark-rgb: 255, 105, 180;
+  --primary-light-rgb: 255, 228, 232;
+  --secondary-rgb: 30, 144, 255;
+  --secondary-dark-rgb: 24, 115, 204;
+  --accent-rgb: 255, 105, 180;
+  --accent-light-rgb: 255, 182, 193;
+  --bg-rgb: 255, 245, 248;
+  --border-rgb: 255, 214, 222;
+  --shadow-card: 0 2px 12px rgba(255, 182, 193, 0.2);
+  --shadow-card-hover: 0 8px 30px rgba(255, 182, 193, 0.3);
+  --shadow-button: 0 4px 14px rgba(30, 144, 255, 0.3);
+  --grad-hero-from: #FFB6C1;
+  --grad-hero-to: #1E90FF;
+  --grad-soft-from: #FFF5F8;
+  --grad-soft-to: #FFE4E8;
+  --footer-from: #E91E63;
+  --footer-to: #AD1457;
+  color-scheme: light;
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-bg text-text font-body antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-secondary px-6 py-3 rounded-lg font-semibold
+           hover:bg-secondary hover:text-white transition-all duration-200
+           shadow-button hover:shadow-lg active:scale-[0.98]
+           focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+  .btn-secondary {
+    @apply bg-secondary text-white px-6 py-3 rounded-lg font-semibold
+           hover:bg-primary-dark transition-all duration-200
+           shadow-button hover:shadow-lg active:scale-[0.98]
+           focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2;
+  }
+  .btn-outline {
+    @apply border-2 border-secondary text-secondary px-6 py-3 rounded-lg font-semibold
+           hover:bg-secondary hover:text-white transition-all duration-200
+           active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg border border-border bg-white
+           text-text placeholder-text-muted
+           focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
+           transition-all duration-200;
+  }
+  .card {
+    @apply bg-white rounded-card shadow-card p-6 transition-all duration-300;
+  }
+  .card-hover {
+    @apply hover:shadow-card-hover hover:-translate-y-2;
+  }
+  .section-padding {
+    @apply px-4 sm:px-6 lg:px-8 py-16 md:py-24;
+  }
+  .gradient-hero {
+    background: linear-gradient(135deg, var(--grad-hero-from), var(--grad-hero-to));
+  }
+  .gradient-soft {
+    background: linear-gradient(180deg, var(--grad-soft-from), var(--grad-soft-to));
+  }
+  .footer-gradient {
+    background: linear-gradient(160deg, var(--footer-from), var(--footer-to));
+  }
+  .header-top {
+    background: linear-gradient(90deg, var(--footer-to), var(--footer-from), var(--footer-to));
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, var(--grad-hero-from), var(--grad-hero-to));
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: rgb(var(--bg-rgb)); }
+::-webkit-scrollbar-thumb { background: rgb(var(--primary-rgb)); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--primary-dark-rgb)); }
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, rgb(var(--border-rgb)) 25%, rgb(var(--bg-rgb)) 50%, rgb(var(--border-rgb)) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
