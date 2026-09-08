@@ -19,7 +19,7 @@ services:
       - key: SITE_URL
         value: https://sparkpretty.co.ke
       - key: CORS_ORIGIN
-        value: https://sparkpretty-closet.vercel.app,https://sparkpretty.co.ke
+        value: https://sparkpretty.vercel.app,https://sparkpretty.co.ke
       - key: MPESA_CONSUMER_KEY
         sync: false
       - key: MPESA_CONSUMER_SECRET

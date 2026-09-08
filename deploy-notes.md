@@ -39,7 +39,7 @@
 | `JWT_SECRET` | random 64-char string (`openssl rand -hex 32`) |
 | `JWT_EXPIRES_IN` | `7d` |
 | `SITE_URL` | `https://sparkpretty.co.ke` |
-| `CORS_ORIGIN` | `https://sparkpretty.co.ke,https://sparkpretty-closet.vercel.app` |
+| `CORS_ORIGIN` | `https://sparkpretty.vercel.app,https://sparkpretty.co.ke` |
 | `MPESA_CONSUMER_KEY` | your Daraja sandbox key |
 | `MPESA_CONSUMER_SECRET` | your Daraja sandbox secret |
 | `MPESA_SHORTCODE` | `174379` |
@@ -89,8 +89,8 @@ This creates:
    - Build command: `npm run build`
    - Output directory: `dist`
 4. Env variable:
-   - `VITE_API_URL` = `https://sparkpretty-backend.up.railway.app/api`
-   - (or `https://api.sparkpretty.co.ke/api` if you set the custom domain)
+   - `VITE_API_URL` = `https://sparkpretty-closet.onrender.com/api`
+   - (Set it in `frontend/.env.production`, which is committed, so Vercel builds bake it in)
 5. Deploy
 
 ---
