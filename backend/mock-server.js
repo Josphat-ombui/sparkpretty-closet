@@ -24,6 +24,8 @@ const db = {
   orders: [],
   blogs: [],
   reviews: [],
+  subscribers: [],
+  contacts: [],
 };
 let nextId = 1;
 const oid = () => String(nextId++);
@@ -74,10 +76,76 @@ const seedData = async () => {
 
   // Admin user
   const adminHash = await bcrypt.hash('admin123', 12);
-  db.users.push({
+  const adminUser = {
     _id: oid(), name: 'Admin', email: 'admin@sparkpretty.co.ke', password: adminHash,
     phone: '0729366991', role: 'admin', addresses: [], createdAt: new Date().toISOString(),
+  };
+  db.users.push(adminUser);
+
+  // A customer user for order attribution
+  const customerHash = await bcrypt.hash('customer123', 12);
+  db.users.push({
+    _id: oid(), name: 'Grace Wanjiru', email: 'grace@test.com', password: customerHash,
+    phone: '0712345678', role: 'customer', addresses: [], createdAt: new Date().toISOString(),
   });
+  const customer = db.users[1];
+
+  // Newsletter subscribers
+  const subscriberEmails = ['nancy@test.com', 'joy@test.com', 'faith@test.com', 'anne@test.com', 'mercy@test.com', 'esther@test.com'];
+  for (const email of subscriberEmails) {
+    db.subscribers.push({ _id: oid(), email, active: true, createdAt: new Date().toISOString() });
+  }
+
+  // Contact messages (some unread)
+  db.contacts.push(
+    { _id: oid(), name: 'Lucy Kamau', email: 'lucy@test.com', phone: '0722111222', subject: 'Delivery question', message: 'How long does delivery to Mombasa take?', read: false, replied: false, createdAt: new Date().toISOString() },
+    { _id: oid(), name: 'Diana Achieng', email: 'diana@test.com', phone: '', subject: 'Size enquiry', message: 'Do the midi dresses run true to size?', read: false, replied: false, createdAt: new Date().toISOString() },
+    { _id: oid(), name: 'Sara Njeri', email: 'sara@test.com', phone: '0733555666', subject: 'Thanks!', message: 'Loved my order, thank you!', read: true, replied: true, createdAt: new Date().toISOString() },
+  );
+
+  // Sample orders across the last 90 days (for dashboard analytics)
+  const productById = {};
+  db.products.forEach((p) => { productById[p.name] = p; });
+  const orderStatusRoll = () => {
+    const r = Math.random();
+    if (r < 0.45) return 'delivered';
+    if (r < 0.65) return 'shipped';
+    if (r < 0.85) return 'paid';
+    if (r < 0.93) return 'pending';
+    return 'cancelled';
+  };
+  const now = Date.now();
+  for (let i = 0; i < 28; i++) {
+    const daysAgo = Math.floor(Math.random() * 88);
+    const createdAt = new Date(now - daysAgo * 86400000 - Math.floor(Math.random() * 86400000));
+    const itemCount = 1 + Math.floor(Math.random() * 3);
+    const items = [];
+    for (let j = 0; j < itemCount; j++) {
+      const p = sampleProducts[Math.floor(Math.random() * sampleProducts.length)];
+      const v = p.variants[0];
+      const quantity = 1 + Math.floor(Math.random() * 3);
+      items.push({ product: productById[p.name]?._id, name: p.name, size: v.size, color: v.color, quantity, price: v.price });
+    }
+    const subtotal = items.reduce((s, it) => s + it.price * it.quantity, 0);
+    const shipping = subtotal >= 5000 ? 0 : 350;
+    const status = daysAgo === 0 ? (Math.random() > 0.5 ? 'pending' : 'paid') : orderStatusRoll();
+    db.orders.push({
+      _id: oid(), user: Math.random() > 0.35 ? customer._id : null,
+      sessionId: 'seed-session', items,
+      shippingAddress: { label: 'Home', street: '123 Kenyatta Ave', city: 'Nairobi', county: 'Nairobi', zip: '00100', country: 'Kenya' },
+      subtotal, shipping, total: subtotal + shipping,
+      payment: {
+        method: 'mpesa',
+        mpesaReceipt: status === 'paid' ? `MOCK${1000 + i}ABC` : '',
+        checkoutRequestId: `ws_CO_${now}_${i}`,
+        merchantRequestId: `mr_${now}_${i}`,
+        status: status === 'paid' ? 'completed' : status === 'pending' ? 'pending' : 'failed',
+      },
+      status, createdAt: createdAt.toISOString(),
+    });
+  }
+
+  console.log(`  [SEED] ${cats.length} categories, ${sampleProducts.length} products, ${db.users.length} users, ${db.orders.length} orders, ${db.blogs.length} blog posts`);
 
   // Sample blog posts
   db.blogs.push(
@@ -410,7 +478,81 @@ app.post('/api/payments/mpesa/callback', (req, res) => {
 // ============================================
 app.get('/api/admin/stats', auth, adminOnly, (req, res) => {
   const revenue = db.orders.filter((o) => o.status === 'paid').reduce((sum, o) => sum + o.total, 0);
-  res.json({ success: true, data: { totalProducts: db.products.length, totalOrders: db.orders.length, totalUsers: db.users.length, totalBlogs: db.blogs.length, revenue } });
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayOrders = db.orders.filter((o) => new Date(o.createdAt) >= todayStart).length;
+  const lowStock = db.products.filter((p) => p.variants.some((v) => v.stock <= 5)).length;
+  res.json({
+    success: true,
+    data: {
+      totalProducts: db.products.length,
+      totalOrders: db.orders.length,
+      totalUsers: db.users.length,
+      totalBlogs: db.blogs.length,
+      totalSubscribers: db.subscribers.length,
+      unreadContacts: db.contacts.filter((c) => !c.read).length,
+      revenue, todayOrders, lowStock,
+    },
+  });
+});
+
+// Analytics: sales series for the last N days
+app.get('/api/admin/analytics/sales', auth, adminOnly, (req, res) => {
+  const days = Math.min(90, Math.max(7, parseInt(req.query.days, 10) || 30));
+  const since = new Date();
+  since.setDate(since.getDate() - (days - 1));
+  since.setHours(0, 0, 0, 0);
+
+  const byDate = {};
+  for (const o of db.orders.filter((o) => o.status !== 'cancelled')) {
+    const d = new Date(o.createdAt);
+    if (d < since) continue;
+    const key = d.toISOString().slice(0, 10);
+    byDate[key] = byDate[key] || { revenue: 0, orders: 0 };
+    byDate[key].revenue += o.total;
+    byDate[key].orders += 1;
+  }
+
+  const series = [];
+  let totalRevenue = 0;
+  let totalOrders = 0;
+  for (let i = 0; i < days; i++) {
+    const d = new Date(since);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    const row = byDate[key] || { revenue: 0, orders: 0 };
+    totalRevenue += row.revenue;
+    totalOrders += row.orders;
+    series.push({ date: key, revenue: row.revenue, orders: row.orders });
+  }
+  res.json({ success: true, data: { series, totalRevenue, totalOrders } });
+});
+
+// Analytics: top products by quantity sold
+app.get('/api/admin/analytics/top-products', auth, adminOnly, (req, res) => {
+  const agg = {};
+  for (const o of db.orders.filter((o) => o.status !== 'cancelled')) {
+    for (const it of o.items) {
+      agg[it.name] = agg[it.name] || { quantity: 0, revenue: 0 };
+      agg[it.name].quantity += it.quantity;
+      agg[it.name].revenue += it.quantity * it.price;
+    }
+  }
+  const rows = Object.entries(agg)
+    .map(([name, v]) => ({ _id: name, ...v }))
+    .sort((a, b) => b.quantity - a.quantity)
+    .slice(0, 8);
+  res.json({ success: true, data: rows });
+});
+
+// Analytics: orders by status
+app.get('/api/admin/analytics/orders', auth, adminOnly, (req, res) => {
+  const counts = {};
+  for (const o of db.orders) counts[o.status] = (counts[o.status] || 0) + 1;
+  const rows = Object.entries(counts)
+    .map(([status, count]) => ({ _id: status, count }))
+    .sort((a, b) => a._id.localeCompare(b._id));
+  res.json({ success: true, data: rows });
 });
 
 // Admin Products
@@ -449,11 +591,16 @@ app.delete('/api/admin/products/:id', auth, adminOnly, (req, res) => {
 
 // Admin Orders
 app.get('/api/admin/orders', auth, adminOnly, (req, res) => {
-  const orders = db.orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((o) => {
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.max(1, parseInt(req.query.limit, 10) || 20);
+  let orders = [...db.orders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const total = orders.length;
+  const start = (page - 1) * limit;
+  const items = orders.slice(start, start + limit).map((o) => {
     const user = o.user ? db.users.find((u) => u._id === o.user) : null;
     return { ...o, user: user ? { _id: user._id, name: user.name, email: user.email } : null };
   });
-  res.json({ success: true, data: orders });
+  res.json({ success: true, data: { items, total, page, pages: Math.ceil(total / limit) } });
 });
 
 app.put('/api/admin/orders/:id/status', auth, adminOnly, (req, res) => {
@@ -582,6 +729,19 @@ app.get('/sitemap.xml', (req, res) => {
 
 app.get('/robots.txt', (req, res) => {
   res.header('Content-Type', 'text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin\n\nSitemap: ${BASE_URL}/sitemap.xml`);
+});
+
+// ============================================
+// SITE SETTINGS (public)
+// ============================================
+app.get('/api/site/settings', (req, res) => res.json({ success: true, data: {} }));
+app.get('/api/site/banners', (req, res) => {
+  res.json({
+    success: true,
+    data: [
+      { _id: oid(), title: 'New Season, New Looks', subtitle: 'Shop the latest arrivals', image: '', link: '/shop', cta: 'Shop Now', type: 'hero', order: 1, active: true },
+    ],
+  });
 });
 
 // ============================================

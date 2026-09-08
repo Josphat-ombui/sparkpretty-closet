@@ -316,7 +316,7 @@ const seed = async () => {
     await User.create(adminUser);
     console.log('Created admin user: admin@sparkpretty.co.ke / admin123');
 
-    await Blog.insertMany(blogPosts);
+    await Blog.create(blogPosts);
     console.log(`Seeded ${blogPosts.length} blog posts`);
 
     process.exit(0);
