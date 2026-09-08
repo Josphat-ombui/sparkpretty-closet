@@ -18,11 +18,11 @@ const fadeIn = { hidden: { opacity: 0 }, visible: (i = 0) => ({ opacity: 1, tran
 const scaleIn = { hidden: { opacity: 0, scale: 0.9 }, visible: (i = 0) => ({ opacity: 1, scale: 1, transition: { delay: i * 0.1, duration: 0.5 } }) };
 
 const categories = [
-  { name: 'Dresses', slug: 'dresses', color: '#FFB6C1', desc: 'Elegant for every occasion' },
-  { name: 'Tops', slug: 'tops', color: '#FFB6C1', desc: 'Stylish everyday wear' },
-  { name: 'Bottoms', slug: 'bottoms', color: '#FFB6C1', desc: 'Jeans, skirts & trousers' },
-  { name: 'Shoes', slug: 'shoes', color: '#FF8FA3', desc: 'Step out in style' },
-  { name: 'Accessories', slug: 'accessories', color: '#FFE0E6', desc: 'The finishing touches' },
+  { name: 'Dresses', slug: 'dresses', color: '#FFB6C1', desc: 'Elegant for every occasion', image: '/images/dresses-3.jpeg' },
+  { name: 'Tops', slug: 'tops', color: '#FFB6C1', desc: 'Stylish everyday wear', image: '/images/tops-1.jpeg' },
+  { name: 'Bottoms', slug: 'bottoms', color: '#FFB6C1', desc: 'Jeans, skirts & trousers', image: '/images/bottoms-2.jpeg' },
+  { name: 'Shoes', slug: 'shoes', color: '#FF8FA3', desc: 'Step out in style', image: '/images/shoes-6.jpeg' },
+  { name: 'Accessories', slug: 'accessories', color: '#FFE0E6', desc: 'The finishing touches', image: '/images/accessories-1.jpeg' },
 ];
 
 const testimonials = [
@@ -35,12 +35,12 @@ const testimonials = [
 ];
 
 const galleryImages = [
-  { alt: 'Woman in Rose Garden Midi Dress at brunch', gradient: 'from-pink-200 to-rose-300' },
-  { alt: 'Style flatlay with crossbody bag and accessories', gradient: 'from-amber-100 to-orange-200' },
-  { alt: 'Model wearing Elegant Wrap Dress at office', gradient: 'from-indigo-200 to-purple-300' },
-  { alt: 'Summer look with Sunset Maxi Dress on beach', gradient: 'from-orange-200 to-red-200' },
-  { alt: 'Street style with canvas sneakers and jeans', gradient: 'from-teal-200 to-cyan-300' },
-  { alt: 'Evening look with strappy heels and clutch', gradient: 'from-gray-200 to-slate-300' },
+  { alt: 'Woman in Rose Garden Midi Dress at brunch', image: '/images/hero-2.jpeg' },
+  { alt: 'Style flatlay with crossbody bag and accessories', image: '/images/accessories-2.jpeg' },
+  { alt: 'Model wearing Elegant Wrap Dress at office', image: '/images/hero-4.jpeg' },
+  { alt: 'Summer look with Sunset Maxi Dress on beach', image: '/images/dresses-2.jpeg' },
+  { alt: 'Street style with canvas sneakers and jeans', image: '/images/shoes-7.jpeg' },
+  { alt: 'Evening look with strappy heels and clutch', image: '/images/shoes-5.jpeg' },
 ];
 
 const colorSwatches = [
@@ -56,6 +56,7 @@ export default function Home() {
   const [featured, setFeatured] = useState([]);
   const [newArrivals, setNewArrivals] = useState([]);
   const [blogPosts, setBlogPosts] = useState([]);
+  const [banners, setBanners] = useState({ hero: null, promo: null, story: null });
   const [email, setEmail] = useState('');
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [wishlist, setWishlist] = useState([]);
@@ -66,7 +67,17 @@ export default function Home() {
     api.get('/products?limit=4&sort=newest&featured=true').then((res) => setFeatured(res.data.products || []));
     api.get('/products?limit=8&sort=newest').then((res) => setNewArrivals(res.data.products || []));
     api.get('/blog?limit=3').then((res) => setBlogPosts(res.data.posts || []));
+
+    api.get('/site/banners').then((res) => {
+      const list = res.data || [];
+      const pick = (type) => list.find((b) => b.type === type && b.active) || null;
+      setBanners({ hero: pick('hero'), promo: pick('promo'), story: pick('story') });
+    }).catch(() => {});
   }, []);
+
+  const heroBanner = banners.hero;
+  const promoBanner = banners.promo;
+  const storyBanner = banners.story;
 
   const toggleWishlist = (productId) => {
     setWishlist((prev) =>
@@ -124,25 +135,34 @@ export default function Home() {
             <div>
               <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
                 <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
-                  <Sparkles size={14} /> New Collection 2026
+                  <Sparkles size={14} /> {heroBanner?.title || 'New Collection 2026'}
                 </span>
               </motion.div>
               <motion.h1
                 initial="hidden" animate="visible" variants={fadeUp} custom={1}
                 className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight"
               >
-                Wear Your <br />
-                <span className="text-white/90">Beautiful Sparkle</span>
+                {heroBanner?.subtitle ? (
+                  heroBanner.subtitle
+                ) : (
+                  <>
+                    Wear Your <br />
+                    <span className="text-white/90">Beautiful Sparkle</span>
+                  </>
+                )}
               </motion.h1>
               <motion.p
                 initial="hidden" animate="visible" variants={fadeUp} custom={2}
                 className="text-white/80 text-lg md:text-xl mb-10 max-w-lg leading-relaxed"
               >
-                Curated fashion for the confident, sparkling woman. Discover pieces that celebrate your unique beauty and make you feel extraordinary.
+                {heroBanner?.link && heroBanner?.cta ? 'Curated fashion for the confident, sparkling woman. Discover pieces that celebrate your unique beauty.' : 'Curated fashion for the confident, sparkling woman. Discover pieces that celebrate your unique beauty and make you feel extraordinary.'}
               </motion.p>
               <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3} className="flex flex-wrap gap-4">
-                <Link to="/shop" className="bg-white text-text px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-button hover:shadow-lg inline-flex items-center gap-2 text-lg">
-                  Shop New Arrivals <ArrowRight size={18} />
+                <Link
+                  to={heroBanner?.link || '/shop'}
+                  className="bg-white text-text px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-button hover:shadow-lg inline-flex items-center gap-2 text-lg"
+                >
+                  {heroBanner?.cta || 'Shop New Arrivals'} <ArrowRight size={18} />
                 </Link>
                 <Link to="/about" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all inline-flex items-center gap-2 text-lg">
                   Our Story
@@ -156,12 +176,8 @@ export default function Home() {
               className="hidden lg:block"
             >
               <div className="relative">
-                <div className="aspect-[3/4] rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center overflow-hidden">
-                  <div className="text-center text-white/60">
-                    <Sparkles size={64} className="mx-auto mb-4 opacity-30" />
-                    <p className="font-heading text-2xl">New Collection</p>
-                    <p className="text-sm mt-2">Shop the look</p>
-                  </div>
+                <div className="aspect-[3/4] rounded-2xl border-4 border-white/30 overflow-hidden shadow-modal">
+                  <img src={heroBanner?.image || '/images/hero-1.jpeg'} alt="Curated women's fashion collection" className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -bottom-6 -left-6 bg-white rounded-xl p-4 shadow-modal flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -229,15 +245,12 @@ export default function Home() {
                 <Link
                   to={`/shop?category=${cat.slug}`}
                   className="group block aspect-[3/4] rounded-card overflow-hidden relative"
-                  style={{ background: `linear-gradient(135deg, ${cat.color}, ${cat.color}dd)` }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Sparkles size={32} className="text-white/20 group-hover:text-white/40 transition-all group-hover:scale-110 duration-500" />
-                  </div>
+                  <img src={cat.image} alt={cat.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
                     <h3 className="font-heading text-xl font-bold group-hover:translate-x-1 transition-transform duration-300">{cat.name}</h3>
-                    <p className="text-white/70 text-sm mt-1">{cat.desc}</p>
+                    <p className="text-white/80 text-sm mt-1">{cat.desc}</p>
                   </div>
                   <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                     <ArrowRight size={14} className="text-white" />
@@ -256,9 +269,9 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-              <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">Our Story</span>
+              <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">{storyBanner?.title || 'Our Story'}</span>
               <h2 id="story-heading" className="font-heading text-3xl md:text-5xl font-bold mt-2 mb-6 leading-tight">
-                Fashion That Celebrates <span className="text-gradient">You</span>
+                {storyBanner?.subtitle || 'Fashion That Celebrates'} <span className="text-gradient">{storyBanner?.subtitle ? '' : 'You'}</span>
               </h2>
               <p className="text-text-light text-lg leading-relaxed mb-6">
                 Sparkpretty Closet was born from a simple belief: every woman deserves to feel beautiful and confident in what she wears. We curate fashion that blends African vibrancy with global trends, creating pieces that tell your story.
@@ -294,11 +307,8 @@ export default function Home() {
               transition={{ duration: 0.8 }}
               className="relative"
             >
-              <div className="aspect-[4/5] rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center overflow-hidden">
-                <div className="text-center text-primary/30">
-                  <Sparkles size={48} className="mx-auto mb-3" />
-                  <p className="font-heading text-xl">Our Story</p>
-                </div>
+              <div className="aspect-[4/5] rounded-2xl overflow-hidden">
+                <img src={storyBanner?.image || '/images/hero-3.jpeg'} alt="Our fashion story" className="w-full h-full object-cover" />
               </div>
               <div className="absolute -top-4 -right-4 bg-white rounded-xl p-5 shadow-modal max-w-xs">
                 <div className="flex items-center gap-3 mb-2">
@@ -348,9 +358,13 @@ export default function Home() {
                   >
                     <Link to={`/product/${product.slug}`} className="block">
                       <div className="aspect-[3/4] bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center text-primary/20 font-heading text-base px-4 text-center">
-                          {product.name}
-                        </div>
+                        {variant.images?.[0] ? (
+                          <img src={variant.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-primary/20 font-heading text-base px-4 text-center">
+                            {product.name}
+                          </div>
+                        )}
                         {salePrice && (
                           <span className="absolute top-3 left-3 bg-error text-white text-xs font-bold px-2.5 py-1 rounded-full">
                             -{Math.round(((price - salePrice) / price) * 100)}%
@@ -416,10 +430,8 @@ export default function Home() {
             className="relative rounded-2xl overflow-hidden"
           >
             <div className="gradient-hero py-16 md:py-20 px-8 md:px-16 text-center relative">
-              <div className="absolute inset-0 opacity-5" aria-hidden="true">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent rounded-full blur-3xl" />
-              </div>
+              <img src={promoBanner?.image || '/images/hero-5.jpeg'} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+              <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
               <div className="relative z-10">
                 <motion.span
                   initial={{ opacity: 0, y: 10 }}
@@ -427,7 +439,7 @@ export default function Home() {
                   viewport={{ once: true }}
                   className="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-medium mb-6"
                 >
-                  <Zap size={14} /> Limited Time Offer
+                  <Zap size={14} /> {promoBanner?.title || 'Limited Time Offer'}
                 </motion.span>
                 <motion.h2
                   initial={{ opacity: 0, y: 20 }}
@@ -436,7 +448,7 @@ export default function Home() {
                   transition={{ delay: 0.1 }}
                   className="font-heading text-4xl md:text-6xl font-bold text-white mb-4"
                 >
-                  Up to 30% Off
+                  {promoBanner?.subtitle || 'Up to 30% Off'}
                 </motion.h2>
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
@@ -445,7 +457,7 @@ export default function Home() {
                   transition={{ delay: 0.2 }}
                   className="text-white/80 text-lg md:text-xl mb-8 max-w-lg mx-auto"
                 >
-                  Spring into savings! Shop our curated sale collection before it's gone.
+                  {promoBanner?.cta ? `Shop the collection today — ${promoBanner.cta}.` : "Spring into savings! Shop our curated sale collection before it's gone."}
                 </motion.p>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -454,8 +466,8 @@ export default function Home() {
                   transition={{ delay: 0.3 }}
                   className="flex flex-wrap gap-4 justify-center"
                 >
-                  <Link to="/shop" className="bg-white text-text px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-button inline-flex items-center gap-2 text-lg">
-                    Shop the Sale <ArrowRight size={18} />
+                  <Link to={promoBanner?.link || '/shop'} className="bg-white text-text px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-button inline-flex items-center gap-2 text-lg">
+                    {promoBanner?.cta || 'Shop the Sale'} <ArrowRight size={18} />
                   </Link>
                   <div className="flex items-center gap-2 text-white/70 text-sm">
                     <Clock size={16} /> Ends Sunday midnight
@@ -496,9 +508,13 @@ export default function Home() {
                   >
                     <Link to={`/product/${product.slug}`} className="block">
                       <div className="aspect-[3/4] bg-gradient-to-br from-primary/5 to-accent/10 relative overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center text-primary/20 font-heading text-base px-4 text-center">
-                          {product.name}
-                        </div>
+                        {variant.images?.[0] ? (
+                          <img src={variant.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-primary/20 font-heading text-base px-4 text-center">
+                            {product.name}
+                          </div>
+                        )}
                         {isNew && (
                           <span className="absolute top-3 left-3 bg-success text-white text-xs font-bold px-2.5 py-1 rounded-full">New</span>
                         )}
@@ -572,8 +588,8 @@ export default function Home() {
                   i === 0 || i === 3 ? 'md:row-span-2' : ''
                 }`}
               >
-                <div className={`w-full ${i === 0 || i === 3 ? 'aspect-[3/5]' : 'aspect-square'} bg-gradient-to-br ${img.gradient} flex items-center justify-center`}>
-                  <Sparkles size={24} className="text-white/30 group-hover:text-white/50 transition-all group-hover:scale-110 duration-500" />
+                <div className={`w-full ${i === 0 || i === 3 ? 'aspect-[3/5]' : 'aspect-square'} relative overflow-hidden`}>
+                  <img src={img.image} alt={img.alt} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="absolute bottom-0 left-0 right-0 p-4">

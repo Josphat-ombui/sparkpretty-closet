@@ -331,11 +331,8 @@ export default function About() {
               transition={{ duration: 0.8 }}
               className="relative"
             >
-              <div className="aspect-[4/5] rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 flex items-center justify-center">
-                <div className="text-center text-primary/30">
-                  <Gem size={48} className="mx-auto mb-3" />
-                  <p className="font-heading text-xl">Quality Promise</p>
-                </div>
+              <div className="aspect-[4/5] rounded-2xl overflow-hidden">
+                <img src="/images/hero-2.jpeg" alt="Sparkpretty craftsmanship and quality" className="w-full h-full object-cover" />
               </div>
               <div className="absolute -bottom-4 -left-4 bg-white rounded-xl p-5 shadow-modal">
                 <div className="flex items-center gap-3">

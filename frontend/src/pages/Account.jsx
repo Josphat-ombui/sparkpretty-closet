@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Package, MapPin, LogOut } from 'lucide-react';
+import { User, Package, MapPin, Shield, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api, formatPrice } from '../lib/api';
 
@@ -49,6 +49,11 @@ export default function Account() {
                   {item.icon} {item.label}
                 </button>
               ))}
+              {user.role === 'admin' && (
+                <Link to="/admin" className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-primary-dark bg-primary/5 hover:bg-primary/10 transition-all">
+                  <Shield size={18} /> Admin Dashboard
+                </Link>
+              )}
               <button onClick={() => { logout(); navigate('/'); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-error hover:bg-error/5 transition-all">
                 <LogOut size={18} /> Sign Out
               </button>

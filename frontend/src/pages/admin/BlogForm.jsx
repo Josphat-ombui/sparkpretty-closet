@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { api } from '../../lib/api';
 import toast from 'react-hot-toast';
+import { PageHeader } from '../../components/admin/ui.jsx';
 
 export default function BlogForm() {
   const { id } = useParams();
@@ -14,13 +15,13 @@ export default function BlogForm() {
     tags: '', published: false, metaTitle: '', metaDescription: '',
   });
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(isEdit);
 
   useEffect(() => {
     if (isEdit) {
-      api.get('/admin/blog').then((res) => {
-        const post = (res.data || []).find((p) => p._id === id);
-        if (post) setForm({ ...post, tags: post.tags?.join(', ') || '' });
-      });
+      api.get(`/admin/blog/${id}`).then((res) => {
+        setForm({ ...res.data, tags: res.data.tags?.join(', ') || '' });
+      }).catch(() => toast.error('Failed to load post')).finally(() => setFetching(false));
     }
   }, [id, isEdit]);
 
@@ -43,20 +44,22 @@ export default function BlogForm() {
       }
       navigate('/admin/blog');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save');
+      toast.error(err.message || 'Failed to save');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="section-padding">
-      <div className="max-w-4xl mx-auto">
-        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-secondary text-sm font-semibold mb-6 hover:gap-2 transition-all">
-          <ArrowLeft size={14} /> Back
-        </button>
-        <h1 className="font-heading text-3xl font-bold mb-8">{isEdit ? 'Edit Post' : 'New Blog Post'}</h1>
+    <div className="max-w-4xl">
+      <Link to="/admin/blog" className="inline-flex items-center gap-1 text-secondary text-sm font-semibold mb-4 hover:gap-2 transition-all">
+        <ArrowLeft size={14} /> Back to posts
+      </Link>
+      <PageHeader title={isEdit ? 'Edit Post' : 'New Blog Post'} />
 
+      {fetching ? (
+        <div className="card space-y-4"><div className="skeleton h-12" /><div className="skeleton h-24" /><div className="skeleton h-40" /></div>
+      ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="card space-y-6">
             <div>
@@ -75,6 +78,7 @@ export default function BlogForm() {
               <div>
                 <label className="block text-sm font-medium mb-2" htmlFor="blog-cover">Cover Image URL</label>
                 <input id="blog-cover" name="coverImage" value={form.coverImage} onChange={handleChange} className="input-field" placeholder="https://..." />
+                {form.coverImage && <img src={form.coverImage} alt="" className="mt-2 w-28 h-28 rounded-lg object-cover" />}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2" htmlFor="blog-author">Author</label>
@@ -113,7 +117,7 @@ export default function BlogForm() {
             <button type="button" onClick={() => navigate('/admin/blog')} className="btn-outline">Cancel</button>
           </div>
         </form>
-      </div>
+      )}
     </div>
   );
 }

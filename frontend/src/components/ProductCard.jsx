@@ -22,9 +22,13 @@ export default function ProductCard({ product }) {
   return (
     <Link to={`/product/${product.slug}`} className="group card card-hover p-0 overflow-hidden block">
       <div className="aspect-[3/4] bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center text-primary/30 font-heading text-base px-4 text-center">
-          {product.name}
-        </div>
+        {variant.images?.[0] ? (
+          <img src={variant.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-primary/30 font-heading text-base px-4 text-center">
+            {product.name}
+          </div>
+        )}
         {salePrice && (
           <span className="absolute top-3 left-3 bg-error text-white text-xs font-bold px-2 py-1 rounded-full z-10">
             Sale

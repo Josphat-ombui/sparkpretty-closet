@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag, User, Search, Menu, X, Phone, Palette, Mail,
-  Clock, Instagram, Facebook, Twitter, Truck, Sparkles,
+  Clock, Instagram, Facebook, Twitter, Truck, Sparkles, Shield,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -146,6 +146,16 @@ export default function Header() {
               >
                 <User size={20} aria-hidden="true" />
               </Link>
+              {user?.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  className="p-2 text-text hover:text-primary-dark transition-colors"
+                  aria-label="Admin dashboard"
+                  title="Admin dashboard"
+                >
+                  <Shield size={20} aria-hidden="true" />
+                </Link>
+              )}
               <button
                 onClick={cycleTheme}
                 className="relative p-2 text-text hover:text-secondary transition-colors group"

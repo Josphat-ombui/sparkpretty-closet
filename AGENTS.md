@@ -130,6 +130,66 @@ status: "pending" | "paid" | "shipped" | "delivered" | "cancelled"
 timestamps
 ```
 
+### Subscriber
+```
+email: String, unique, lowercase
+active: Boolean, default true
+timestamps
+```
+
+### ContactMessage
+```
+name: String, required
+email: String, required
+phone: String
+subject: String
+message: String, required
+read: Boolean, default false
+replied: Boolean, default false
+timestamps
+```
+
+### Setting (key-value site config)
+```
+key: String, unique
+value: Mixed
+type: "text" | "textarea" | "number" | "boolean" | "json"
+group: String, default "general"
+label: String
+timestamps
+```
+
+### Banner
+```
+title: String
+subtitle: String
+image: String
+link: String
+cta: String
+type: "hero" | "promo" | "story"
+order: Number
+active: Boolean, default true
+timestamps
+```
+
+## Admin API (`/api/admin`, all behind `auth` + `adminOnly`)
+- `GET /stats` — dashboard totals (products, orders, users, blogs, subscribers, unread contacts, revenue, today orders, low stock)
+- `GET /analytics/sales?days=` — revenue + order count per day
+- `GET /analytics/top-products`, `GET /analytics/orders` — chart data
+- `GET/POST/PUT/DELETE /products`, `GET/POST/PUT/DELETE /products/:id` (search, category filter, pagination)
+- `GET/POST/PUT/DELETE /categories`, `GET/POST/PUT/DELETE /categories/:id` (category list includes productCount)
+- `GET/POST/PUT/DELETE /orders`, `GET/POST/PUT/DELETE /orders/:id`, `PUT /orders/:id/status` (search by id/receipt, status filter, pagination; paid orders cannot be deleted)
+- `GET/POST/PUT/DELETE /blog`, `GET/POST/PUT/DELETE /blog/:id` (search, pagination)
+- `GET/POST/PUT/DELETE /users`, `GET/POST/PUT/DELETE /users/:id` (search by name/email/phone, role filter; delete self blocked)
+- `GET/DELETE /subscribers`, `GET/PUT/DELETE /contacts`, `GET/POST/PUT/DELETE /banners`, `GET/PUT/DELETE /settings`
+- Public routes: `GET /api/site/banners` (active only), `GET /api/site/settings` (key→value map)
+
+## Admin Frontend
+- All `/admin*` routes guarded by `ProtectedRoute adminOnly` + wrapped in `AdminLayout` (sidebar shell)
+- Pages: Dashboard, Products (+ form), Categories, Orders, Blog (+ form), Users, Subscribers, Messages, Banners, Settings
+- Admin pages use `components/admin/ui.jsx` helpers: `PageHeader`, `Card`, `Pagination`, `EmptyState`, `Modal`, `StatusPill`, `ORDER_STATUS`, `PAYMENT_STATUS`
+- Admin routes are lazy-loaded (code split) to keep the public site bundle lean
+
 ## Conventions
 - All API responses: `{ success: true, data: ... }` or `{ success: false, message: "..." }`
 - Slugs are auto-generated from product/category names via `slugify`
@@ -140,3 +200,4 @@ timestamps
 - Phone numbers normalized to `254XXXXXXXXX` format
 - All env vars in `.env`, never hardcoded
 - Placeholder images: `https://placehold.co/600x800/C2185B/FFFFFF?text=ProductName`
+- Admin list endpoints use `parsePagination` (`?page=&limit=&search=&...`) from `utils/pagination.js` and return `{ items, total, page, pages, limit }`

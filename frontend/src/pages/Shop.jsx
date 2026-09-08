@@ -556,9 +556,13 @@ export default function Shop() {
                         >
                           <Link to={`/product/${product.slug}`} className="block">
                             <div className="aspect-[3/4] bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">
-                              <div className="absolute inset-0 flex items-center justify-center text-primary/20 font-heading text-sm px-4 text-center">
-                                {product.name}
-                              </div>
+                              {variant.images?.[0] ? (
+                                <img src={variant.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                              ) : (
+                                <div className="absolute inset-0 flex items-center justify-center text-primary/20 font-heading text-sm px-4 text-center">
+                                  {product.name}
+                                </div>
+                              )}
                               {/* Badge */}
                               {badge && (
                                 <span className={`absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full ${badge.style}`}>
@@ -717,8 +721,12 @@ export default function Shop() {
                 </div>
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Image */}
-                  <div className="aspect-[3/4] bg-gradient-to-br from-primary/5 to-primary/10 rounded-card flex items-center justify-center text-primary/20 font-heading">
-                    {quickView.name}
+                  <div className="aspect-[3/4] bg-gradient-to-br from-primary/5 to-primary/10 rounded-card flex items-center justify-center text-primary/20 font-heading overflow-hidden">
+                    {quickView.variants?.[0]?.images?.[0] ? (
+                      <img src={quickView.variants[0].images[0]} alt={quickView.name} className="w-full h-full object-cover" />
+                    ) : (
+                      quickView.name
+                    )}
                   </div>
                   {/* Info */}
                   <div className="flex flex-col">

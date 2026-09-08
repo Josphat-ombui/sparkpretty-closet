@@ -17,6 +17,7 @@ import newsletterRoutes from './routes/newsletter.js';
 import contactRoutes from './routes/contact.js';
 import blogRoutes from './routes/blog.js';
 import uploadRoutes from './routes/uploads.js';
+import siteRoutes from './routes/site.js';
 import seoRoutes from './routes/seo.js';
 
 dotenv.config();
@@ -77,6 +78,7 @@ app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/site', siteRoutes);
 
 // SEO routes (outside /api prefix)
 app.use('/', seoRoutes);

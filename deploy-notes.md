@@ -21,7 +21,6 @@
      `mongodb+srv://<user>:<pass>@cluster0.xxxxx.mongodb.net/`
 5. Append the database name: `sparkpretty`
    - Final URI: `mongodb+srv://<user>:<pass>@cluster0.xxxxx.mongodb.net/sparkpretty`
-
 ---
 
 ## 2. Backend → Railway Deployment
