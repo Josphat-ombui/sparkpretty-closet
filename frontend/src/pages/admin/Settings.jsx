@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Save, Plus, Trash2 } from 'lucide-react';
+import { Save, Plus, Trash2, Palette } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
+import { useTheme } from '../../context/ThemeContext';
+import ThemePicker from '../../components/admin/ThemePicker';
 import { Card, PageHeader, Modal } from '../../components/admin/ui.jsx';
 
 const GROUPS = ['general', 'store', 'contact', 'social', 'seo'];
@@ -12,13 +14,28 @@ export default function Settings() {
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ key: '', value: '', type: 'text', group: 'general', label: '' });
   const [edits, setEdits] = useState({}); // key -> edited value
+  const { theme, setTheme } = useTheme();
+  const [siteTheme, setSiteTheme] = useState('');
+  const [themeDirty, setThemeDirty] = useState(false);
 
   const load = () => {
     setLoading(true);
-    api.get('/admin/settings').then((r) => setSettings(r.data || [])).catch(() => toast.error('Failed to load settings')).finally(() => setLoading(false));
+    api.get('/admin/settings').then((r) => {
+      setSettings(r.data || []);
+      const st = (r.data || []).find((s) => s.key === 'site_theme');
+      setSiteTheme(st?.value || theme);
+    }).catch(() => toast.error('Failed to load settings')).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
+
+  const saveTheme = async () => {
+    try {
+      await api.put('/admin/settings/site_theme', { value: siteTheme, type: 'text', group: 'general', label: 'Site Theme' });
+      toast.success('Theme saved for the whole site');
+      setThemeDirty(false);
+    } catch (err) { toast.error(err.message || 'Failed to save theme'); }
+  };
 
   const renderValue = (s) => {
     const onChange = (v) => setEdits((prev) => ({ ...prev, [s.key]: v }));
@@ -88,6 +105,27 @@ export default function Settings() {
           </div>
         }
       />
+
+      <div className="mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2">
+            <Palette size={18} className="text-primary" />
+            <h2 className="font-heading text-xl font-semibold">Site Theme</h2>
+          </div>
+          {themeDirty && (
+            <button onClick={saveTheme} className="btn-primary flex items-center gap-2 text-sm"><Save size={16} /> Save Theme</button>
+          )}
+        </div>
+        <p className="text-text-light text-sm mb-3">Pick a theme for the whole site — public storefront and admin panel. Visitors see your chosen theme by default.</p>
+        <Card>
+          <ThemePicker
+            size="lg"
+            value={siteTheme}
+            onSelect={(id) => { setSiteTheme(id); setThemeDirty(true); setTheme(id); }}
+            onPreview={(id) => setTheme(id)}
+          />
+        </Card>
+      </div>
 
       {loading ? (
         <Card><div className="skeleton h-40" /></Card>

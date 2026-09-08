@@ -3,31 +3,83 @@
 @tailwind utilities;
 
 :root {
-  --primary-rgb: 255, 182, 193;
-  --primary-dark-rgb: 255, 105, 180;
-  --primary-light-rgb: 255, 228, 232;
-  --secondary-rgb: 30, 144, 255;
-  --secondary-dark-rgb: 24, 115, 204;
-  --accent-rgb: 255, 105, 180;
-  --accent-light-rgb: 255, 182, 193;
-  --bg-rgb: 255, 245, 248;
-  --border-rgb: 255, 214, 222;
-  --shadow-card: 0 2px 12px rgba(255, 182, 193, 0.2);
-  --shadow-card-hover: 0 8px 30px rgba(255, 182, 193, 0.3);
-  --shadow-button: 0 4px 14px rgba(30, 144, 255, 0.3);
-  --grad-hero-from: #FFB6C1;
-  --grad-hero-to: #1E90FF;
-  --grad-soft-from: #FFF5F8;
-  --grad-soft-to: #FFE4E8;
-  --footer-from: #E91E63;
-  --footer-to: #AD1457;
   color-scheme: light;
+}
+
+/*
+  Theme tokens are applied by ThemeContext via [data-theme].
+  :root holds the default (blue) so the app works before JS hydrates.
+*/
+:root,
+:root[data-theme='blue'] {
+  --primary: #1D6FD8;
+  --primary-dark: #155AA8;
+  --primary-light: #DBEAFE;
+  --accent: #4B8BD6;
+  --accent-light: #E3EFFC;
+  --bg: #F4F8FD;
+  --bg-white: #FFFFFF;
+  --border: #CBD9EA;
+  --footer: #0F3D73;
+  --shadow-card: 0 2px 12px rgba(29, 111, 216, 0.12);
+  --shadow-card-hover: 0 8px 30px rgba(29, 111, 216, 0.18);
+  --shadow-button: 0 4px 14px rgba(29, 111, 216, 0.28);
+  --heavy: #1D6FD8;
+}
+
+:root[data-theme='green'] {
+  --primary: #1E8A5A;
+  --primary-dark: #167146;
+  --primary-light: #DCF3E7;
+  --accent: #4CAF7B;
+  --accent-light: #E4F5EC;
+  --bg: #F2FAF6;
+  --bg-white: #FFFFFF;
+  --border: #C8E4D4;
+  --footer: #0E5E3B;
+  --shadow-card: 0 2px 12px rgba(30, 138, 90, 0.12);
+  --shadow-card-hover: 0 8px 30px rgba(30, 138, 90, 0.18);
+  --shadow-button: 0 4px 14px rgba(30, 138, 90, 0.28);
+  --heavy: #1E8A5A;
+}
+
+:root[data-theme='pink'] {
+  --primary: #D6337B;
+  --primary-dark: #B32462;
+  --primary-light: #FCE0EA;
+  --accent: #E888AE;
+  --accent-light: #FBEAF0;
+  --bg: #FFF6F8;
+  --bg-white: #FFFFFF;
+  --border: #F1D4DE;
+  --footer: #8C1E4E;
+  --shadow-card: 0 2px 12px rgba(214, 51, 123, 0.12);
+  --shadow-card-hover: 0 8px 30px rgba(214, 51, 123, 0.18);
+  --shadow-button: 0 4px 14px rgba(214, 51, 123, 0.28);
+  --heavy: #D6337B;
+}
+
+:root[data-theme='maroon'] {
+  --primary: #8E1F3B;
+  --primary-dark: #71182F;
+  --primary-light: #F3DEE4;
+  --accent: #B04A63;
+  --accent-light: #F6E7EB;
+  --bg: #FBF5F6;
+  --bg-white: #FFFFFF;
+  --border: #E8CFD5;
+  --footer: #5E1226;
+  --shadow-card: 0 2px 12px rgba(142, 31, 59, 0.12);
+  --shadow-card-hover: 0 8px 30px rgba(142, 31, 59, 0.18);
+  --shadow-button: 0 4px 14px rgba(142, 31, 59, 0.28);
+  --heavy: #8E1F3B;
 }
 
 @layer base {
   * { @apply border-border; }
   body {
     @apply bg-bg text-text font-body antialiased;
+    background-color: var(--bg);
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
@@ -36,63 +88,77 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-secondary px-6 py-3 rounded-lg font-semibold
-           hover:bg-secondary hover:text-white transition-all duration-200
-           shadow-button hover:shadow-lg active:scale-[0.98]
-           focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
-  }
-  .btn-secondary {
-    @apply bg-secondary text-white px-6 py-3 rounded-lg font-semibold
+    @apply bg-primary text-white px-6 py-3 rounded-lg font-semibold
            hover:bg-primary-dark transition-all duration-200
            shadow-button hover:shadow-lg active:scale-[0.98]
-           focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2;
+           focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    background-color: var(--primary);
+    color: #FFFFFF;
   }
+  .btn-primary:hover { background-color: var(--primary-dark); }
+  .btn-secondary {
+    @apply bg-white text-primary border border-primary px-6 py-3 rounded-lg font-semibold
+           hover:bg-primary hover:text-white transition-all duration-200
+           active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .btn-secondary:hover { background-color: var(--primary); }
   .btn-outline {
-    @apply border-2 border-secondary text-secondary px-6 py-3 rounded-lg font-semibold
-           hover:bg-secondary hover:text-white transition-all duration-200
-           active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2;
+    @apply border-2 px-6 py-3 rounded-lg font-semibold
+           hover:bg-primary hover:text-white transition-all duration-200
+           active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    border-color: var(--primary);
+    color: var(--primary);
   }
+  .btn-outline:hover { background-color: var(--primary); }
   .input-field {
-    @apply w-full px-4 py-3 rounded-lg border border-border bg-white
+    @apply w-full px-4 py-3 rounded-lg border bg-white
            text-text placeholder-text-muted
            focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
            transition-all duration-200;
+    border-color: var(--border);
   }
   .card {
     @apply bg-white rounded-card shadow-card p-6 transition-all duration-300;
+    background-color: var(--bg-white);
+    box-shadow: var(--shadow-card);
   }
   .card-hover {
     @apply hover:shadow-card-hover hover:-translate-y-2;
   }
+  .card-hover:hover { box-shadow: var(--shadow-card-hover); }
   .section-padding {
     @apply px-4 sm:px-6 lg:px-8 py-16 md:py-24;
   }
   .gradient-hero {
-    background: linear-gradient(135deg, var(--grad-hero-from), var(--grad-hero-to));
+    background-color: var(--primary);
+    color: #FFFFFF;
   }
   .gradient-soft {
-    background: linear-gradient(180deg, var(--grad-soft-from), var(--grad-soft-to));
+    background-color: var(--primary-light);
   }
   .footer-gradient {
-    background: linear-gradient(160deg, var(--footer-from), var(--footer-to));
+    background-color: var(--footer);
+    color: #FFFFFF;
   }
   .header-top {
-    background: linear-gradient(90deg, var(--footer-to), var(--footer-from), var(--footer-to));
+    background-color: var(--primary-dark);
+    color: #FFFFFF;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, var(--grad-hero-from), var(--grad-hero-to));
+    color: var(--primary-dark);
   }
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: rgb(var(--bg-rgb)); }
-::-webkit-scrollbar-thumb { background: rgb(var(--primary-rgb)); border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: rgb(var(--primary-dark-rgb)); }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary-dark); }
 
 /* Skeleton shimmer */
 @keyframes shimmer {
@@ -100,10 +166,16 @@
   100% { background-position: 200% 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, rgb(var(--border-rgb)) 25%, rgb(var(--bg-rgb)) 50%, rgb(var(--border-rgb)) 75%);
+  background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 8px;
+}
+
+/* Smooth theme transition */
+body, .gradient-hero, .gradient-soft, .footer-gradient, .header-top,
+.gradient-hero *, .footer-gradient *, .header-top * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 /* Reduced motion */

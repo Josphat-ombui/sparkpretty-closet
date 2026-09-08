@@ -7,30 +7,41 @@
 
 ## Design Tokens
 
-### Colors
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `--primary` | `#C2185B` | CTA buttons, links, active states, nav |
-| `--primary-dark` | `#AD1457` | Hover states, emphasis |
-| `--primary-light` | `#F8BBD0` | Soft backgrounds, badges, hover fills |
-| `--accent` | `#D4A574` | Secondary buttons, decorative accents |
-| `--accent-light` | `#E8C9A0` | Accent hover states |
-| `--bg` | `#FFF5F5` | Page background |
-| `--bg-white` | `#FFFFFF` | Cards, modals, sections |
-| `--text` | `#1A1A2E` | Body text |
-| `--text-light` | `#6B7280` | Secondary/meta text |
-| `--text-muted` | `#9CA3AF` | Placeholder text |
-| `--border` | `#F3E8E8` | Dividers, card borders |
-| `--success` | `#10B981` | In stock, success states |
-| `--warning` | `#F59E0B` | Low stock, pending states |
-| `--error` | `#EF4444` | Out of stock, errors |
+### Theming (4 switchable themes — no gradients)
+The site supports **4 distinct flat themes**: `blue`, `green`, `pink`, `maroon`.
+Themes are applied via the `data-theme` attribute on `<html>` and defined in `frontend/src/index.css`
+as CSS custom properties. `frontend/src/context/ThemeContext.jsx` exposes `useTheme()` (`theme`,
+`setTheme`, `cycleTheme`, `themes`, `themeList`, `loaded`) and manages persistence in localStorage
+(`sparkpretty-theme`). The site-wide default is read from the `site_theme` Setting (via `/api/site/settings`).
 
-### Gradients
-| Name | Value | Usage |
-|------|-------|-------|
-| `--gradient-hero` | `linear-gradient(135deg, #C2185B, #D4A574)` | Hero sections, featured banners |
-| `--gradient-soft` | `linear-gradient(180deg, #FFF5F5, #F8BBD0)` | Section backgrounds |
-| `--gradient-card` | `linear-gradient(145deg, #FFF5F5, #FFFFFF)` | Card backgrounds |
+### Color tokens (per theme)
+| Token | Role | Usage |
+|-------|------|-------|
+| `--primary` | Brand accent (deep) | Buttons (white text), links, active nav/tabs, header `footer-gradient` |
+| `--primary-dark` | Darker hover | Hover states, `header-top` bar |
+| `--primary-light` | Soft tint | Badges, active tab fills, `gradient-soft` |
+| `--accent` | Complement | Secondary/decorative accents (subtle) |
+| `--accent-light` | Accent tint | Accent hover fills |
+| `--bg` | Page background (very light tint) | Body background |
+| `--bg-white` | `#FFFFFF` always | Cards, modals, sections |
+| `--footer` | Deep footer color | Footer background |
+| `--border` | Tinted border | Dividers, card borders, inputs |
+| `--text` | `#1A1A2E` | Body text (near-black, high contrast on all themes) |
+| `--text-light` / `--text-muted` | Neutral grays | Meta/placeholder text |
+
+Palettes (swatch → primary):
+- **blue** `#1D6FD8` (Ocean Blue) — professional, crisp
+- **green** `#1E8A5A` (Emerald Green) — fresh, natural
+- **pink** `#D6337B` (Blush Pink) — soft, feminine
+- **maroon** `#8E1F3B` (Royal Maroon) — rich, elegant
+
+**Legacy utility names are retained but now render *solid*, not gradients:**
+`gradient-hero` → solid `--primary` (white text), `gradient-soft` → solid `--primary-light`,
+`footer-gradient` → solid `--footer`, `header-top` → solid `--primary-dark`, `text-gradient` → solid `--primary-dark` text.
+
+The Tailwind alias color `secondary` maps to `var(--primary)` for backward compatibility, so all
+existing `text-secondary` / `bg-secondary` usages stay theme-aware and produce visible brand-colored
+nav/active states. See `frontend/tailwind.config.js` and `frontend/src/index.css`.
 
 ### Typography
 | Role | Font | Weight | Size |
@@ -54,10 +65,8 @@
 - Badges: `9999px` (pill)
 
 ### Shadows
-- Card: `0 2px 12px rgba(194, 24, 91, 0.08)`
-- Card hover: `0 8px 30px rgba(194, 24, 91, 0.12)`
-- Button: `0 4px 14px rgba(194, 24, 91, 0.25)`
-- Modal: `0 20px 60px rgba(0, 0, 0, 0.15)`
+Per-theme, defined as CSS vars (`--shadow-card`, `--shadow-card-hover`, `--shadow-button`), tinted to the
+current theme's `--primary`. Modal shadow is fixed: `0 20px 60px rgba(0, 0, 0, 0.15)`.
 
 ## Data Models
 

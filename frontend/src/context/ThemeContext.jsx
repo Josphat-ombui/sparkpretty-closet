@@ -1,111 +1,93 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { api } from '../lib/api';
 
 export const THEMES = {
-  'light-pink': {
-    label: 'Light Pink',
-    swatch: '#FFB6C1',
-    vars: {
-      '--primary-rgb': '255, 182, 193',
-      '--primary-dark-rgb': '255, 105, 180',
-      '--primary-light-rgb': '255, 228, 232',
-      '--secondary-rgb': '30, 144, 255',
-      '--secondary-dark-rgb': '24, 115, 204',
-      '--accent-rgb': '255, 105, 180',
-      '--accent-light-rgb': '255, 182, 193',
-      '--bg-rgb': '255, 245, 248',
-      '--border-rgb': '255, 214, 222',
-      '--shadow-card': '0 2px 12px rgba(255, 182, 193, 0.2)',
-      '--shadow-card-hover': '0 8px 30px rgba(255, 182, 193, 0.3)',
-      '--shadow-button': '0 4px 14px rgba(30, 144, 255, 0.3)',
-      '--grad-hero-from': '#FFB6C1',
-      '--grad-hero-to': '#1E90FF',
-      '--grad-soft-from': '#FFF5F8',
-      '--grad-soft-to': '#FFE4E8',
-      '--footer-from': '#E91E63',
-      '--footer-to': '#AD1457',
-    },
-  },
-  'dark-pink': {
-    label: 'Dark Pink',
-    swatch: '#C2185B',
-    vars: {
-      '--primary-rgb': '194, 24, 91',
-      '--primary-dark-rgb': '173, 20, 87',
-      '--primary-light-rgb': '248, 187, 208',
-      '--secondary-rgb': '30, 144, 255',
-      '--secondary-dark-rgb': '24, 115, 204',
-      '--accent-rgb': '212, 165, 116',
-      '--accent-light-rgb': '232, 201, 160',
-      '--bg-rgb': '255, 245, 245',
-      '--border-rgb': '243, 232, 232',
-      '--shadow-card': '0 2px 12px rgba(194, 24, 91, 0.08)',
-      '--shadow-card-hover': '0 8px 30px rgba(194, 24, 91, 0.12)',
-      '--shadow-button': '0 4px 14px rgba(30, 144, 255, 0.25)',
-      '--grad-hero-from': '#C2185B',
-      '--grad-hero-to': '#D4A574',
-      '--grad-soft-from': '#FFF5F5',
-      '--grad-soft-to': '#F8BBD0',
-      '--footer-from': '#C2185B',
-      '--footer-to': '#880E4F',
-    },
-  },
   blue: {
-    label: 'Blue',
-    swatch: '#1E90FF',
-    vars: {
-      '--primary-rgb': '30, 144, 255',
-      '--primary-dark-rgb': '24, 115, 204',
-      '--primary-light-rgb': '227, 242, 255',
-      '--secondary-rgb': '30, 144, 255',
-      '--secondary-dark-rgb': '24, 115, 204',
-      '--accent-rgb': '255, 105, 180',
-      '--accent-light-rgb': '255, 182, 193',
-      '--bg-rgb': '245, 250, 255',
-      '--border-rgb': '219, 234, 254',
-      '--shadow-card': '0 2px 12px rgba(30, 144, 255, 0.12)',
-      '--shadow-card-hover': '0 8px 30px rgba(30, 144, 255, 0.18)',
-      '--shadow-button': '0 4px 14px rgba(30, 144, 255, 0.3)',
-      '--grad-hero-from': '#1E90FF',
-      '--grad-hero-to': '#FF69B4',
-      '--grad-soft-from': '#F5FAFF',
-      '--grad-soft-to': '#E3F2FF',
-      '--footer-from': '#1E90FF',
-      '--footer-to': '#0B5ED7',
-    },
+    id: 'blue',
+    label: 'Ocean Blue',
+    swatch: '#1D6FD8',
+    description: 'Clear, trustworthy and professional.',
+  },
+  green: {
+    id: 'green',
+    label: 'Emerald Green',
+    swatch: '#1E8A5A',
+    description: 'Fresh, natural and calming.',
+  },
+  pink: {
+    id: 'pink',
+    label: 'Blush Pink',
+    swatch: '#D6337B',
+    description: 'Soft, feminine and modern.',
+  },
+  maroon: {
+    id: 'maroon',
+    label: 'Royal Maroon',
+    swatch: '#8E1F3B',
+    description: 'Rich, elegant and bold.',
   },
 };
 
-export const THEME_ORDER = ['light-pink', 'dark-pink', 'blue'];
+export const THEME_ORDER = ['blue', 'green', 'pink', 'maroon'];
 
 const ThemeContext = createContext();
 
 export const useTheme = () => useContext(ThemeContext);
 
 const getInitial = () => {
-  const stored = typeof window !== 'undefined' && localStorage.getItem('sparkpretty-theme');
-  return THEMES[stored] ? stored : 'light-pink';
+  if (typeof window === 'undefined') return 'blue';
+  const stored = localStorage.getItem('sparkpretty-theme');
+  return THEMES[stored] ? stored : 'blue';
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(getInitial);
+  const [theme, setThemeState] = useState(getInitial);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const root = document.documentElement;
-    const vars = THEMES[theme].vars;
-    Object.entries(vars).forEach(([key, value]) => root.style.setProperty(key, value));
-    root.setAttribute('data-theme', theme);
-    localStorage.setItem('sparkpretty-theme', theme);
+    root.setAttribute('data-theme', THEMES[theme] ? theme : 'blue');
   }, [theme]);
 
-  const cycleTheme = () => {
-    setTheme((prev) => {
+  useEffect(() => {
+    let active = true;
+    api.get('/site/settings')
+      .then((res) => {
+        if (!active) return;
+        const remote = (res.data || {}).site_theme;
+        if (THEMES[remote] && !localStorage.getItem('sparkpretty-theme')) {
+          setThemeState(remote);
+          document.documentElement.setAttribute('data-theme', remote);
+        }
+      })
+      .catch(() => {})
+      .finally(() => active && setLoaded(true));
+    return () => { active = false; };
+  }, []);
+
+  const setTheme = useCallback((next) => {
+    if (!THEMES[next]) return;
+    setThemeState(next);
+    document.documentElement.setAttribute('data-theme', next);
+    try {
+      localStorage.setItem('sparkpretty-theme', next);
+    } catch { /* ignore */ }
+  }, []);
+
+  const cycleTheme = useCallback(() => {
+    setThemeState((prev) => {
       const idx = THEME_ORDER.indexOf(prev);
-      return THEME_ORDER[(idx + 1) % THEME_ORDER.length];
+      const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
+      document.documentElement.setAttribute('data-theme', next);
+      try {
+        localStorage.setItem('sparkpretty-theme', next);
+      } catch { /* ignore */ }
+      return next;
     });
-  };
+  }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, cycleTheme, themes: THEMES }}>
+    <ThemeContext.Provider value={{ theme, setTheme, cycleTheme, themes: THEMES, themeList: THEME_ORDER, loaded }}>
       {children}
     </ThemeContext.Provider>
   );

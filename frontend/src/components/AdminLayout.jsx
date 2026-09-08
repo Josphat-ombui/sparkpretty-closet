@@ -6,6 +6,8 @@ import {
   Heart, ExternalLink, Store,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme, THEMES, THEME_ORDER } from '../context/ThemeContext';
+import { Check } from 'lucide-react';
 
 const navSections = [
   {
@@ -47,6 +49,7 @@ const navSections = [
 
 export default function AdminLayout({ children }) {
   const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
@@ -103,6 +106,23 @@ export default function AdminLayout({ children }) {
         ))}
       </div>
 
+      <div className="border-t border-border px-3 pt-3 pb-2">
+        <p className="px-1 mb-2 text-[11px] font-semibold uppercase tracking-widest text-text-muted">Theme preview</p>
+        <div className="flex items-center gap-2 px-1">
+          {THEME_ORDER.map((id) => (
+            <button
+              key={id}
+              onClick={() => setTheme(id)}
+              title={`${THEMES[id].label} theme`}
+              aria-label={`Switch to ${THEMES[id].label} theme`}
+              className="relative w-8 h-8 rounded-full border-2 border-white shadow hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-primary"
+              style={{ backgroundColor: THEMES[id].swatch }}
+            >
+              {theme === id && <Check size={14} className="absolute inset-0 m-auto text-white drop-shadow" />}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="border-t border-border p-3 space-y-1">
         <Link to="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text-light hover:bg-bg transition-colors">
           <ExternalLink size={17} /> View Store

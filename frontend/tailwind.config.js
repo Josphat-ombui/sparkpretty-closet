@@ -5,29 +5,29 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: 'rgb(var(--primary-rgb))',
-          dark: 'rgb(var(--primary-dark-rgb))',
-          light: 'rgb(var(--primary-light-rgb))',
+          DEFAULT: 'var(--primary)',
+          dark: 'var(--primary-dark)',
+          light: 'var(--primary-light)',
         },
         secondary: {
-          DEFAULT: 'rgb(var(--secondary-rgb))',
-          dark: 'rgb(var(--secondary-dark-rgb))',
-          light: '#E8F4FF',
+          DEFAULT: 'var(--primary)',
+          dark: 'var(--primary-dark)',
+          light: 'var(--primary-light)',
         },
         accent: {
-          DEFAULT: 'rgb(var(--accent-rgb))',
-          light: 'rgb(var(--accent-light-rgb))',
+          DEFAULT: 'var(--accent)',
+          light: 'var(--accent-light)',
         },
         bg: {
-          DEFAULT: 'rgb(var(--bg-rgb))',
-          white: '#FFFFFF',
+          DEFAULT: 'var(--bg)',
+          white: 'var(--bg-white)',
         },
         text: {
-          DEFAULT: '#000000',
+          DEFAULT: '#1A1A2E',
           light: '#4A4A4A',
           muted: '#8A8A8A',
         },
-        border: 'rgb(var(--border-rgb))',
+        border: 'var(--border)',
         success: '#10B981',
         warning: '#F59E0B',
         error: '#EF4444',
