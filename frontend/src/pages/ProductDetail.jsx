@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { api, formatPrice } from '../lib/api';
 import { useCart } from '../context/CartContext';
+import { useContent } from '../context/ContentContext';
 import SEO from '../components/SEO';
 import toast from 'react-hot-toast';
 
@@ -14,6 +15,7 @@ const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { delay: 0.1, duration:
 
 export default function ProductDetail() {
   const { slug } = useParams();
+  const { get } = useContent();
   const [product, setProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -252,9 +254,9 @@ export default function ProductDetail() {
               {/* Trust Signals */}
               <div className="grid grid-cols-3 gap-3 mb-6">
                 {[
-                  { icon: <Truck size={16} />, text: 'Free shipping 5K+' },
-                  { icon: <RotateCcw size={16} />, text: '7-day returns' },
-                  { icon: <Shield size={16} />, text: 'Secure pay' },
+                  { icon: <Truck size={16} />, text: get('trust_free_shipping_short', 'Free shipping 5K+') },
+                  { icon: <RotateCcw size={16} />, text: get('return_policy', '7-day returns') },
+                  { icon: <Shield size={16} />, text: get('secure_payment_short', 'Secure pay') },
                 ].map((item) => (
                   <div key={item.text} className="flex flex-col items-center text-center text-xs text-text-light gap-1 p-2 bg-bg rounded-lg">
                     <span className="text-secondary">{item.icon}</span>
@@ -264,8 +266,8 @@ export default function ProductDetail() {
               </div>
 
               {/* WhatsApp CTA */}
-              <a href={`https://wa.me/254729366991?text=Hi, I'm interested in ${product.name}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 text-sm text-primary-dark font-medium border border-primary/30 rounded-lg py-2.5 hover:bg-primary/5 transition-all mb-6">
-                <MessageCircle size={16} /> Ask about this item
+              <a href={`https://wa.me/${get('contact_whatsapp', '254729366991')}?text=Hi, I'm interested in ${product.name}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 text-sm text-primary-dark font-medium border border-primary/30 rounded-lg py-2.5 hover:bg-primary/5 transition-all mb-6">
+                <MessageCircle size={16} /> {get('whatsapp_cta', 'Ask about this item')}
               </a>
 
               {/* Description */}

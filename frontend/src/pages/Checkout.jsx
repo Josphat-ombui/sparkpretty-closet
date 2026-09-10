@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { User, MapPin, CreditCard, ChevronRight, Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useContent } from '../context/ContentContext';
 import { api, formatPrice } from '../lib/api';
 import toast from 'react-hot-toast';
 
@@ -11,7 +12,8 @@ const steps = ['Shipping', 'Review', 'Payment'];
 
 export default function Checkout() {
   const [step, setStep] = useState(0);
-  const [shipping, setShipping] = useState({ street: '', city: '', county: '', zip: '', country: 'Kenya' });
+  const { get, num } = useContent();
+  const [shipping, setShipping] = useState({ street: '', city: '', county: '', zip: '', country: get('default_country', 'Kenya') });
   const [phone, setPhone] = useState('');
   const [orderId, setOrderId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,9 @@ export default function Checkout() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const shippingCost = subtotal >= 5000 ? 0 : 350;
+  const freeShipThreshold = num('free_shipping_threshold', 5000);
+  const shippingFee = num('shipping_fee', 350);
+  const shippingCost = subtotal >= freeShipThreshold ? 0 : shippingFee;
   const total = subtotal + shippingCost;
 
   const handleCreateOrder = async () => {

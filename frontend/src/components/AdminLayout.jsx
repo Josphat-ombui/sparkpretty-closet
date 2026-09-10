@@ -6,6 +6,7 @@ import {
   Heart, ExternalLink, Store, Edit3,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useContent } from '../context/ContentContext';
 import { useTheme, THEMES, THEME_ORDER } from '../context/ThemeContext';
 import { Check } from 'lucide-react';
 
@@ -50,6 +51,7 @@ const navSections = [
 
 export default function AdminLayout({ children }) {
   const { user, logout } = useAuth();
+  const { get } = useContent();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -67,7 +69,7 @@ export default function AdminLayout({ children }) {
             <Heart size={18} className="text-white" />
           </div>
           <div>
-            <p className="font-heading font-bold text-lg leading-none">Sparkpretty</p>
+            <p className="font-heading font-bold text-lg leading-none">{get('site_name', 'Sparkpretty')}</p>
             <p className="text-xs text-text-muted mt-1 tracking-wide uppercase">{user?.role === 'editor' ? 'Editor Panel' : 'Admin Panel'}</p>
           </div>
         </Link>

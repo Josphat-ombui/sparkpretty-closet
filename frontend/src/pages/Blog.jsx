@@ -8,12 +8,13 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import SEO from '../components/SEO';
+import { useContent } from '../context/ContentContext';
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.6 } }) };
 
 const READING_TIME = (text) => Math.max(1, Math.ceil((text || '').split(/\s+/).length / 200));
 
-const blogCategories = [
+const DEFAULT_CATEGORIES = [
   { name: 'All', slug: '', icon: '✨' },
   { name: 'Style Tips', slug: 'tips', icon: '💡' },
   { name: 'Trends', slug: 'trends', icon: '🔥' },
@@ -24,13 +25,32 @@ const blogCategories = [
   { name: 'Behind the Scenes', slug: 'behind-the-scenes', icon: '🎬' },
 ];
 
-const customerSpotlights = [
+const DEFAULT_SPOTLIGHTS = [
   { name: 'Amina W.', location: 'Nairobi', text: 'Wore the Rose Garden Midi Dress to my friend\'s wedding and got so many compliments!', avatar: 'A', product: 'Rose Garden Midi Dress' },
   { name: 'Faith M.', location: 'Mombasa', text: 'The Strappy Heel Sandals are my go-to for every event. So comfortable and stylish!', avatar: 'F', product: 'Strappy Heel Sandals' },
   { name: 'Grace N.', location: 'Kisumu', text: 'I styled the Silk Blouse with high-waist jeans for a casual Friday look. Loved it!', avatar: 'G', product: 'Silk Touch Blouse' },
 ];
 
+const DEFAULT_STYLE_GUIDES = [
+  { title: 'How to Style a Midi Dress for Every Occasion', excerpt: 'From office to weekend brunch — master the art of the versatile midi dress.', gradient: 'from-pink-100 to-rose-200', icon: '👗', readTime: '5 min' },
+  { title: '10 Wardrobe Essentials Every Kenyan Woman Needs', excerpt: 'Build a versatile wardrobe with these timeless basics that work hard.', gradient: 'from-amber-100 to-orange-200', icon: '✨', readTime: '4 min' },
+  { title: 'Accessorizing 101: Complete Any Outfit', excerpt: 'The right accessories can transform a simple look into something extraordinary.', gradient: 'from-purple-100 to-indigo-200', icon: '👜', readTime: '3 min' },
+];
+
+const DEFAULT_BTS_ITEMS = [
+  { title: 'How We Source Our Fabrics', desc: 'From local Kenyan markets to international suppliers — our fabric sourcing journey.', gradient: 'from-teal-100 to-cyan-200', icon: '🧵' },
+  { title: 'Meet the Team Behind Your Orders', desc: 'Get to know the passionate people who make your Sparkpretty experience special.', gradient: 'from-violet-100 to-purple-200', icon: '👩‍💻' },
+  { title: 'Our Quality Promise: From Warehouse to Door', desc: 'Every item goes through rigorous quality checks before it reaches you.', gradient: 'from-rose-100 to-pink-200', icon: '✅' },
+];
+
 export default function Blog() {
+  const { get } = useContent();
+  const siteName = get('site_name', 'Sparkpretty Closet');
+  const siteUrl = get('site_url', 'https://sparkpretty.co.ke');
+  const blogCategories = get('blog_categories', DEFAULT_CATEGORIES);
+  const customerSpotlights = get('blog_spotlights', DEFAULT_SPOTLIGHTS);
+  const styleGuides = get('blog_style_guides', DEFAULT_STYLE_GUIDES);
+  const btsItems = get('blog_bts_items', DEFAULT_BTS_ITEMS);
   const [posts, setPosts] = useState([]);
   const [tags, setTags] = useState([]);
   const [selectedTag, setSelectedTag] = useState('');
@@ -83,14 +103,14 @@ export default function Blog() {
   return (
     <div>
       <SEO
-        title="Blog — Style Stories & Fashion Insights"
-        description="Fashion tips, styling guides, and the latest trends from Sparkpretty Closet. Your go-to fashion hub."
+        title={get('blog_seo_title', 'Blog — Style Stories & Fashion Insights')}
+        description={get('blog_seo_description', `Fashion tips, styling guides, and the latest trends from ${siteName}. Your go-to fashion hub.`)}
         url="/blog"
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'Blog',
-          name: 'Sparkpretty Journal',
-          url: 'https://sparkpretty.co.ke/blog',
+          name: `${siteName} Journal`,
+          url: `${siteUrl}/blog`,
           description: 'Fashion tips, styling guides, and the latest trends',
         }}
       />
@@ -107,25 +127,24 @@ export default function Blog() {
           <div className="max-w-2xl">
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
               <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
-                <BookOpen size={14} /> The Spark Journal
+                <BookOpen size={14} /> {get('blog_hero_badge', 'The Spark Journal')}
               </span>
             </motion.div>
             <motion.h1
               initial="hidden" animate="visible" variants={fadeUp} custom={1}
               className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
             >
-              Style Stories &<br />
-              <span className="text-white/90">Fashion Insights</span>
+              {get('blog_hero_heading', 'Style Stories & Fashion Insights')}
             </motion.h1>
             <motion.p
               initial="hidden" animate="visible" variants={fadeUp} custom={2}
               className="text-white/80 text-lg md:text-xl mb-8 max-w-lg"
             >
-              Discover trends, styling tips, and stories from the Sparkpretty world. Your fashion journey starts here.
+              {get('blog_hero_text', 'Discover trends, styling tips, and stories from the Sparkpretty world. Your fashion journey starts here.')}
             </motion.p>
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}>
               <a href="#latest" className="bg-white text-text px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-button inline-flex items-center gap-2">
-                Start Reading <ArrowRight size={18} />
+                {get('blog_hero_cta', 'Start Reading')} <ArrowRight size={18} />
               </a>
             </motion.div>
           </div>
@@ -345,16 +364,12 @@ export default function Blog() {
       <section className="bg-white section-padding" aria-labelledby="styleguides-heading">
         <div className="max-w-7xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-12">
-            <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">Get Inspired</span>
-            <h2 id="styleguides-heading" className="font-heading text-3xl md:text-4xl font-bold mt-2 mb-4">Style Guides</h2>
-            <p className="text-text-light text-lg max-w-xl mx-auto">Learn how to mix, match, and style your favorite pieces</p>
+            <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">{get('blog_styleguides_eyebrow', 'Get Inspired')}</span>
+            <h2 id="styleguides-heading" className="font-heading text-3xl md:text-4xl font-bold mt-2 mb-4">{get('blog_styleguides_heading', 'Style Guides')}</h2>
+            <p className="text-text-light text-lg max-w-xl mx-auto">{get('blog_styleguides_desc', 'Learn how to mix, match, and style your favorite pieces')}</p>
           </motion.div>
           <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { title: 'How to Style a Midi Dress for Every Occasion', excerpt: 'From office to weekend brunch — master the art of the versatile midi dress.', gradient: 'from-pink-100 to-rose-200', icon: '👗', readTime: '5 min' },
-              { title: '10 Wardrobe Essentials Every Kenyan Woman Needs', excerpt: 'Build a versatile wardrobe with these timeless basics that work hard.', gradient: 'from-amber-100 to-orange-200', icon: '✨', readTime: '4 min' },
-              { title: 'Accessorizing 101: Complete Any Outfit', excerpt: 'The right accessories can transform a simple look into something extraordinary.', gradient: 'from-purple-100 to-indigo-200', icon: '👜', readTime: '3 min' },
-            ].map((guide, i) => (
+            {styleGuides.map((guide, i) => (
               <motion.div
                 key={guide.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -389,16 +404,12 @@ export default function Blog() {
       <section className="section-padding" aria-labelledby="bts-heading">
         <div className="max-w-7xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-12">
-            <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">Our Process</span>
-            <h2 id="bts-heading" className="font-heading text-3xl md:text-4xl font-bold mt-2 mb-4">Behind the Scenes</h2>
-            <p className="text-text-light text-lg max-w-xl mx-auto">Discover the people and process behind every Sparkpretty piece</p>
+            <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">{get('blog_bts_eyebrow', 'Our Process')}</span>
+            <h2 id="bts-heading" className="font-heading text-3xl md:text-4xl font-bold mt-2 mb-4">{get('blog_bts_heading', 'Behind the Scenes')}</h2>
+            <p className="text-text-light text-lg max-w-xl mx-auto">{get('blog_bts_desc', `Discover the people and process behind every ${siteName} piece`)}</p>
           </motion.div>
           <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { title: 'How We Source Our Fabrics', desc: 'From local Kenyan markets to international suppliers — our fabric sourcing journey.', gradient: 'from-teal-100 to-cyan-200', icon: '🧵' },
-              { title: 'Meet the Team Behind Your Orders', desc: 'Get to know the passionate people who make your Sparkpretty experience special.', gradient: 'from-violet-100 to-purple-200', icon: '👩‍💻' },
-              { title: 'Our Quality Promise: From Warehouse to Door', desc: 'Every item goes through rigorous quality checks before it reaches you.', gradient: 'from-rose-100 to-pink-200', icon: '✅' },
-            ].map((item, i) => (
+            {btsItems.map((item, i) => (
               <motion.div
                 key={item.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -430,9 +441,9 @@ export default function Blog() {
       <section className="bg-white section-padding" aria-labelledby="spotlights-heading">
         <div className="max-w-7xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-12">
-            <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">Community</span>
-            <h2 id="spotlights-heading" className="font-heading text-3xl md:text-4xl font-bold mt-2 mb-4">Customer Spotlights</h2>
-            <p className="text-text-light text-lg">Real women, real style — see how our community wears Sparkpretty</p>
+            <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">{get('blog_community_eyebrow', 'Community')}</span>
+            <h2 id="spotlights-heading" className="font-heading text-3xl md:text-4xl font-bold mt-2 mb-4">{get('blog_community_heading', 'Customer Spotlights')}</h2>
+            <p className="text-text-light text-lg">{get('blog_spotlights_desc', `Real women, real style — see how our community wears ${siteName}`)}</p>
           </motion.div>
           <div className="grid md:grid-cols-3 gap-6">
             {customerSpotlights.map((customer, i) => (
@@ -461,7 +472,7 @@ export default function Blog() {
             ))}
           </div>
           <div className="text-center mt-8">
-            <p className="text-text-light text-sm mb-3">Want to be featured? Tag us on social media with #SparkprettyStyle</p>
+            <p className="text-text-light text-sm mb-3">Want to be featured? Tag us on social media with {get('blog_hashtag', '#SparkprettyStyle')}</p>
           </div>
         </div>
       </section>
@@ -474,10 +485,10 @@ export default function Blog() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
             <Send size={36} className="text-white/60 mx-auto mb-6" />
             <h2 id="blog-newsletter-heading" className="font-heading text-3xl md:text-4xl font-bold text-white mb-4">
-              Never Miss a Style Story
+              {get('blog_newsletter_heading', 'Never Miss a Style Story')}
             </h2>
             <p className="text-white/80 text-lg mb-8">
-              Subscribe for exclusive fashion tips, early access to new collections, and a 10% welcome discount.
+              {get('blog_newsletter_text', 'Subscribe for exclusive fashion tips, early access to new collections, and a 10% welcome discount.')}
             </p>
             <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
               <label htmlFor="blog-email" className="sr-only">Email address</label>
@@ -494,7 +505,7 @@ export default function Blog() {
                 Subscribe <ArrowRight size={18} />
               </button>
             </form>
-            <p className="text-white/50 text-sm mt-4">Get 10% off your first order. Unsubscribe anytime.</p>
+            <p className="text-white/50 text-sm mt-4">{get('blog_newsletter_footer', 'Get 10% off your first order. Unsubscribe anytime.')}</p>
           </motion.div>
         </div>
       </section>

@@ -8,13 +8,11 @@ import {
 } from 'lucide-react';
 import { api, formatPrice } from '../lib/api';
 import { useCart } from '../context/CartContext';
+import { useContent } from '../context/ContentContext';
 import SEO from '../components/SEO';
 import toast from 'react-hot-toast';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.4 } }) };
-
-const clothingSizes = ['XS', 'S', 'M', 'L', 'XL'];
-const shoeSizes = ['36', '37', '38', '39', '40', '41'];
 
 const colorSwatches = [
   { name: 'Black', hex: '#000000' },
@@ -63,6 +61,10 @@ const categoryIcons = {
 
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { get } = useContent();
+  const sizeFilterPrefs = get('shop_size_filters', null);
+  const clothingSizes = Array.isArray(sizeFilterPrefs?.clothing) ? sizeFilterPrefs.clothing : ['XS', 'S', 'M', 'L', 'XL'];
+  const shoeSizes = Array.isArray(sizeFilterPrefs?.shoes) ? sizeFilterPrefs.shoes : ['36', '37', '38', '39', '40', '41'];
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [total, setTotal] = useState(0);
@@ -183,7 +185,7 @@ export default function Shop() {
     <div>
       <SEO
         title={category ? categories.find((c) => c.slug === category)?.name || 'Shop' : 'Shop All'}
-        description="Browse our curated collection of women's fashion. Dresses, tops, shoes, and accessories with M-Pesa checkout."
+        description={get('shop_seo_description', "Browse our curated collection of women's fashion. Dresses, tops, shoes, and accessories with M-Pesa checkout.")}
         url="/shop"
       />
 
@@ -497,9 +499,9 @@ export default function Shop() {
                 {/* Trust Signals */}
                 <div className="bg-bg rounded-card p-4 space-y-3">
                   {[
-                    { icon: <Truck size={16} />, text: 'Free shipping over KSh 5,000' },
-                    { icon: <Shield size={16} />, text: 'Secure M-Pesa checkout' },
-                    { icon: <RotateCcw size={16} />, text: '7-day easy returns' },
+                    { icon: <Truck size={16} />, text: get('trust_free_shipping_note', `Free shipping over KSh ${get('free_shipping_threshold', '5,000')}`) },
+                    { icon: <Shield size={16} />, text: get('secure_payment_note', 'Secure M-Pesa checkout') },
+                    { icon: <RotateCcw size={16} />, text: get('return_policy_full', '7-day easy returns') },
                   ].map((item) => (
                     <div key={item.text} className="flex items-center gap-2 text-xs text-text-light">
                       <span className="text-primary-dark">{item.icon}</span> {item.text}

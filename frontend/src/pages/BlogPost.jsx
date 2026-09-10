@@ -7,11 +7,13 @@ import {
 } from 'lucide-react';
 import { api, formatPrice } from '../lib/api';
 import { BlogSEO } from '../components/SEO';
+import { useContent } from '../context/ContentContext';
 
 const READING_TIME = (text) => Math.max(1, Math.ceil((text || '').split(/\s+/).length / 200));
 
 export default function BlogPost() {
   const { slug } = useParams();
+  const { get } = useContent();
   const [post, setPost] = useState(null);
   const [relatedPosts, setRelatedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -151,16 +153,16 @@ export default function BlogPost() {
               {post.author?.charAt(0) || 'S'}
             </div>
             <div>
-              <p className="font-semibold">{post.author || 'Sparkpretty Team'}</p>
-              <p className="text-text-light text-sm">Curating fashion tips and stories for the Sparkpretty community.</p>
+              <p className="font-semibold">{post.author || get('blog_post_author_fallback', 'Sparkpretty Team')}</p>
+              <p className="text-text-light text-sm">{get('blog_post_author_bio', 'Curating fashion tips and stories for the Sparkpretty community.')}</p>
             </div>
           </div>
 
           {/* In-Article CTA */}
           <div className="my-12 p-8 gradient-hero rounded-card text-center text-white">
             <Sparkles size={28} className="mx-auto mb-4 text-white/60" />
-            <h3 className="font-heading text-2xl font-bold mb-3">Ready to Update Your Wardrobe?</h3>
-            <p className="text-white/80 mb-6">Explore our latest collection and find your perfect look.</p>
+            <h3 className="font-heading text-2xl font-bold mb-3">{get('blog_post_cta_heading', 'Ready to Update Your Wardrobe?')}</h3>
+            <p className="text-white/80 mb-6">{get('blog_post_cta_text', 'Explore our latest collection and find your perfect look.')}</p>
             <Link to="/shop" className="bg-white text-text px-8 py-3 rounded-lg font-semibold hover:bg-white/90 transition-all inline-flex items-center gap-2">
               Shop Now <ArrowRight size={16} />
             </Link>
@@ -169,8 +171,8 @@ export default function BlogPost() {
           {/* Newsletter CTA */}
           <div className="mb-12 p-6 bg-bg rounded-card text-center">
             <Send size={24} className="text-primary-dark mx-auto mb-3" />
-            <h3 className="font-heading text-xl font-bold mb-2">Enjoyed this article?</h3>
-            <p className="text-text-light text-sm mb-4">Subscribe for more fashion tips and get 10% off your first order.</p>
+            <h3 className="font-heading text-xl font-bold mb-2">{get('blog_post_newsletter_heading', 'Enjoyed this article?')}</h3>
+            <p className="text-text-light text-sm mb-4">{get('blog_post_newsletter_text', 'Subscribe for more fashion tips and get 10% off your first order.')}</p>
             <form onSubmit={handleSubscribe} className="flex gap-2 max-w-md mx-auto">
               <label htmlFor="post-newsletter" className="sr-only">Email address</label>
               <input
@@ -189,7 +191,7 @@ export default function BlogPost() {
           {/* Related Posts */}
           {relatedPosts.length > 0 && (
             <div className="border-t border-border pt-12">
-              <h3 className="font-heading text-2xl font-bold mb-8">You Might Also Like</h3>
+              <h3 className="font-heading text-2xl font-bold mb-8">{get('blog_post_related_heading', 'You Might Also Like')}</h3>
               <div className="grid md:grid-cols-3 gap-6">
                 {relatedPosts.map((rp) => (
                   <Link key={rp._id} to={`/blog/${rp.slug}`} className="group card card-hover p-0 overflow-hidden">

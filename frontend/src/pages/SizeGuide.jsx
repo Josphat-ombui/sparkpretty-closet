@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 
-const clothingSizes = [
+const DEFAULT_CLOTHING = [
   { size: 'XS', bust: '80-84', waist: '60-64', hips: '86-90' },
   { size: 'S', bust: '84-88', waist: '64-68', hips: '90-94' },
   { size: 'M', bust: '88-92', waist: '68-72', hips: '94-98' },
@@ -10,7 +11,7 @@ const clothingSizes = [
   { size: 'XL', bust: '96-100', waist: '76-80', hips: '102-106' },
 ];
 
-const shoeSizes = [
+const DEFAULT_SHOES = [
   { eu: '36', us: '5.5', uk: '3.5', cm: '23' },
   { eu: '37', us: '6.5', uk: '4.5', cm: '23.5' },
   { eu: '38', us: '7.5', uk: '5', cm: '24' },
@@ -19,37 +20,42 @@ const shoeSizes = [
   { eu: '41', us: '10', uk: '7.5', cm: '26' },
 ];
 
+const DEFAULT_INSTRUCTIONS = [
+  { title: 'Bust', text: 'Measure around the fullest part of your chest, keeping the tape horizontal.' },
+  { title: 'Waist', text: 'Measure around your natural waistline, the narrowest part of your torso.' },
+  { title: 'Hips', text: 'Measure around the fullest part of your hips and buttocks.' },
+];
+
 export default function SizeGuide() {
+  const { get } = useContent();
+  const clothingSizes = get('sizing_clothing', DEFAULT_CLOTHING);
+  const shoeSizes = get('sizing_shoes', DEFAULT_SHOES);
+  const instructions = get('sizing_instructions', DEFAULT_INSTRUCTIONS);
+
   return (
     <div className="section-padding">
       <div className="max-w-4xl mx-auto">
         <motion.div initial="hidden" animate="visible" variants={fadeUp} className="text-center mb-12">
-          <h1 className="font-heading text-3xl md:text-4xl font-bold mb-3">Size Guide</h1>
-          <p className="text-text-light">Find your perfect fit</p>
+          <h1 className="font-heading text-3xl md:text-4xl font-bold mb-3">{get('sizing_page_heading', 'Size Guide')}</h1>
+          <p className="text-text-light">{get('sizing_page_subtitle', 'Find your perfect fit')}</p>
         </motion.div>
 
         {/* How to Measure */}
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="card mb-8">
-          <h2 className="font-heading text-xl font-bold mb-4">How to Measure</h2>
+          <h2 className="font-heading text-xl font-bold mb-4">{get('sizing_measure_heading', 'How to Measure')}</h2>
           <div className="grid sm:grid-cols-3 gap-6 text-sm text-text-light">
-            <div>
-              <h3 className="font-semibold text-text mb-1">Bust</h3>
-              <p>Measure around the fullest part of your chest, keeping the tape horizontal.</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-text mb-1">Waist</h3>
-              <p>Measure around your natural waistline, the narrowest part of your torso.</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-text mb-1">Hips</h3>
-              <p>Measure around the fullest part of your hips and buttocks.</p>
-            </div>
+            {instructions.map((inst) => (
+              <div key={inst.title}>
+                <h3 className="font-semibold text-text mb-1">{inst.title}</h3>
+                <p>{inst.text}</p>
+              </div>
+            ))}
           </div>
         </motion.div>
 
         {/* Clothing Sizes */}
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="mb-12">
-          <h2 className="font-heading text-xl font-bold mb-4">Clothing Sizes (cm)</h2>
+          <h2 className="font-heading text-xl font-bold mb-4">{get('sizing_clothing_heading', 'Clothing Sizes (cm)')}</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -76,7 +82,7 @@ export default function SizeGuide() {
 
         {/* Shoe Sizes */}
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-          <h2 className="font-heading text-xl font-bold mb-4">Shoe Sizes</h2>
+          <h2 className="font-heading text-xl font-bold mb-4">{get('sizing_shoes_heading', 'Shoe Sizes')}</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

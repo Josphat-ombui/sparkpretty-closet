@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { api } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/admin/ui.jsx';
+import ImageUpload from '../../components/admin/ImageUpload';
 
 export default function BlogForm() {
   const { id } = useParams();
@@ -76,9 +77,8 @@ export default function BlogForm() {
             </div>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium mb-2" htmlFor="blog-cover">Cover Image URL</label>
-                <input id="blog-cover" name="coverImage" value={form.coverImage} onChange={handleChange} className="input-field" placeholder="https://..." />
-                {form.coverImage && <img src={form.coverImage} alt="" className="mt-2 w-28 h-28 rounded-lg object-cover" />}
+                <label className="block text-sm font-medium mb-2" htmlFor="blog-cover">Cover Image</label>
+                <ImageUpload value={form.coverImage} onChange={(v) => setForm((prev) => ({ ...prev, coverImage: v }))} previewHeight="h-28" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2" htmlFor="blog-author">Author</label>

@@ -71,8 +71,13 @@ export const ContentProvider = ({ children }) => {
     return DEFAULTS[key] ?? '';
   }, [content]);
 
+  const num = useCallback((key, fallback) => {
+    const n = Number(String(get(key, fallback)).replace(/[^0-9.]/g, ''));
+    return Number.isFinite(n) ? n : 0;
+  }, [get]);
+
   return (
-    <ContentContext.Provider value={{ content, loaded, get, reload: loadContent }}>
+    <ContentContext.Provider value={{ content, loaded, get, num, reload: loadContent }}>
       {children}
     </ContentContext.Provider>
   );

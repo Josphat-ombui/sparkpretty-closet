@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useContent } from '../context/ContentContext';
 import toast from 'react-hot-toast';
 
 export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' });
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
+  const { get } = useContent();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -30,7 +32,7 @@ export default function Register() {
             <UserPlus size={24} className="text-primary-dark" />
           </div>
           <h1 className="font-heading text-3xl font-bold">Create Account</h1>
-          <p className="text-text-light mt-2">Join the Sparkpretty family</p>
+          <p className="text-text-light mt-2">{`Join the ${get('site_name', 'Sparkpretty')} family`}</p>
         </div>
         <form onSubmit={handleSubmit} className="card space-y-4">
           <div>

@@ -3,6 +3,7 @@ import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { Card, PageHeader, EmptyState, Modal } from '../../components/admin/ui.jsx';
+import ImageUpload from '../../components/admin/ImageUpload';
 
 const empty = { title: '', subtitle: '', image: '', link: '', cta: '', type: 'hero', order: 0, active: true };
 
@@ -145,9 +146,8 @@ export default function Banners() {
             <input className="input-field" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5">Image URL</label>
-            <input className="input-field" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://... or /images/..." />
-            {form.image && <img src={form.image} alt="preview" className="mt-2 w-full h-28 object-cover rounded-lg" />}
+            <label className="block text-sm font-medium mb-1.5">Banner Image</label>
+            <ImageUpload value={form.image} onChange={(v) => setForm({ ...form, image: v })} previewHeight="h-28" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

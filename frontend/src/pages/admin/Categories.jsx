@@ -3,6 +3,7 @@ import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
 import { Card, PageHeader, EmptyState, Modal } from '../../components/admin/ui.jsx';
+import ImageUpload from '../../components/admin/ImageUpload';
 
 export default function Categories() {
   const [cats, setCats] = useState([]);
@@ -141,9 +142,8 @@ export default function Categories() {
             <textarea className="input-field" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5">Image URL</label>
-            <input className="input-field" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://... or /images/..." />
-            {form.image && <img src={form.image} alt="preview" className="mt-2 w-20 h-20 rounded-lg object-cover" />}
+            <label className="block text-sm font-medium mb-1.5">Category Image</label>
+            <ImageUpload value={form.image} onChange={(v) => setForm({ ...form, image: v })} previewHeight="h-20" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5">Display Order</label>

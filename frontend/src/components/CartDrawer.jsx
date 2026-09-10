@@ -1,11 +1,15 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useContent } from '../context/ContentContext';
 import { formatPrice } from '../lib/api';
 import { Link } from 'react-router-dom';
 
 export default function CartDrawer() {
   const { items, isOpen, setIsOpen, updateItem, removeItem, subtotal, count } = useCart();
+  const { num } = useContent();
+  const freeShipThreshold = num('free_shipping_threshold', 5000);
+  const shippingFee = num('shipping_fee', 350);
 
   return (
     <AnimatePresence>
@@ -103,11 +107,11 @@ export default function CartDrawer() {
                 </div>
                 <div className="flex justify-between mb-4 text-sm">
                   <span className="text-text-light">Shipping</span>
-                  <span className="font-semibold">{subtotal >= 5000 ? 'Free' : formatPrice(350)}</span>
+                  <span className="font-semibold">{subtotal >= freeShipThreshold ? 'Free' : formatPrice(shippingFee)}</span>
                 </div>
                 <div className="flex justify-between mb-6 text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-text">{formatPrice(subtotal + (subtotal >= 5000 ? 0 : 350))}</span>
+                  <span className="text-text">{formatPrice(subtotal + (subtotal >= freeShipThreshold ? 0 : shippingFee))}</span>
                 </div>
                 <Link to="/checkout" onClick={() => setIsOpen(false)} className="btn-primary w-full text-center block">
                   Proceed to Checkout

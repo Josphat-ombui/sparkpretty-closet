@@ -2,17 +2,21 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useContent } from '../context/ContentContext';
 import { formatPrice } from '../lib/api';
 
 export default function Cart() {
   const { items, updateItem, removeItem, subtotal, count } = useCart();
+  const { get, num } = useContent();
+  const freeShipThreshold = num('free_shipping_threshold', 5000);
+  const shippingFee = num('shipping_fee', 350);
 
   if (items.length === 0) {
     return (
       <div className="section-padding text-center">
         <ShoppingBag size={64} className="mx-auto text-border mb-6" />
         <h1 className="font-heading text-3xl font-bold mb-4">Your Bag is Empty</h1>
-        <p className="text-text-light mb-8">Discover something beautiful for yourself.</p>
+        <p className="text-text-light mb-8">{get('cart_empty_text', 'Discover something beautiful for yourself.')}</p>
         <Link to="/shop" className="btn-primary inline-flex items-center gap-2">
           Start Shopping <ArrowRight size={16} />
         </Link>
@@ -77,16 +81,16 @@ export default function Cart() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-text-light">Shipping</span>
-                  <span className="font-medium">{subtotal >= 5000 ? 'Free' : formatPrice(350)}</span>
+                  <span className="font-medium">{subtotal >= freeShipThreshold ? 'Free' : formatPrice(shippingFee)}</span>
                 </div>
                 <div className="border-t border-border pt-3 flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-text">{formatPrice(subtotal + (subtotal >= 5000 ? 0 : 350))}</span>
+                  <span className="text-text">{formatPrice(subtotal + (subtotal >= freeShipThreshold ? 0 : shippingFee))}</span>
                 </div>
               </div>
-              {subtotal < 5000 && (
+              {subtotal < freeShipThreshold && (
                 <p className="text-xs text-text-light mt-3 text-center">
-                  Add {formatPrice(5000 - subtotal)} more for free shipping!
+                  Add {formatPrice(freeShipThreshold - subtotal)} more for free shipping!
                 </p>
               )}
               <Link to="/checkout" className="btn-primary w-full text-center mt-6 block">

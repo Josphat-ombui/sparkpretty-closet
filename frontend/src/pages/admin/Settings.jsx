@@ -5,6 +5,7 @@ import { api } from '../../lib/api';
 import { useTheme } from '../../context/ThemeContext';
 import ThemePicker from '../../components/admin/ThemePicker';
 import { Card, PageHeader, Modal } from '../../components/admin/ui.jsx';
+import ImageUpload from '../../components/admin/ImageUpload';
 
 const GROUPS = ['general', 'store', 'contact', 'social', 'seo'];
 
@@ -52,6 +53,9 @@ export default function Settings() {
     }
     if (s.type === 'textarea') {
       return <textarea className="input-field text-sm py-2" rows={2} value={value ?? ''} onChange={(e) => onChange(e.target.value)} />;
+    }
+    if (s.key.includes('image') || s.key.includes('logo') || s.key.includes('banner') || s.key.includes('photo') || s.key.includes('icon')) {
+      return <ImageUpload value={value} onChange={onChange} previewHeight="h-20" />;
     }
     return <input className="input-field text-sm py-2" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />;
   };
@@ -193,6 +197,7 @@ export default function Settings() {
                 <option value="textarea">Textarea</option>
                 <option value="number">Number</option>
                 <option value="boolean">Boolean</option>
+                <option value="image">Image</option>
               </select>
             </div>
           </div>
@@ -204,7 +209,9 @@ export default function Settings() {
                 ? <select className="input-field" value={form.value === 'true' ? 'true' : 'false'} onChange={(e) => setForm({ ...form, value: e.target.value })}><option value="true">Yes</option><option value="false">No</option></select>
                 : form.type === 'number'
                   ? <input type="number" className="input-field" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} />
-                  : <input className="input-field" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} />}
+                  : form.type === 'image'
+                    ? <ImageUpload value={form.value} onChange={(v) => setForm({ ...form, value: v })} previewHeight="h-24" />
+                    : <input className="input-field" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} />}
           </div>
         </form>
       </Modal>

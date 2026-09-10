@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
-  Save, Search, ChevronDown, ChevronRight, History, Upload, Eye,
+  Save, Search, ChevronDown, ChevronRight, History,
   Undo2, Filter, FileText, Image as ImageIcon, Phone, Mail, Globe,
-  Type, AlignLeft, Hash, List,
+  Type, AlignLeft, Hash, List, Plus, Trash2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { api, API_BASE } from '../../lib/api';
+import { api } from '../../lib/api';
 import { Card, PageHeader, Modal } from '../../components/admin/ui.jsx';
+import ImageUpload from '../../components/admin/ImageUpload';
 
 const SECTION_META = {
   general: { label: 'General / Site Info', icon: Globe },
@@ -26,7 +27,9 @@ const SECTION_META = {
   seo: { label: 'SEO Defaults', icon: Globe },
 };
 
-const TYPE_ICONS = { text: Type, textarea: AlignLeft, number: Hash, json: List, image: ImageIcon };
+const TYPE_ICONS = { text: Type, textarea: AlignLeft, number: Hash, boolean: Hash, json: List, image: ImageIcon };
+const FIELD_TYPES = ['text', 'textarea', 'number', 'boolean', 'json', 'image'];
+const EMPTY_FORM = { key: '', label: '', section: 'general', type: 'text', value: '', description: '' };
 
 function parseJSON(val) {
   if (typeof val === 'string' && (val.startsWith('[') || val.startsWith('{'))) {
@@ -65,47 +68,17 @@ function JSONEditor({ value, onChange }) {
   );
 }
 
-function ImageField({ value, onChange }) {
-  const [uploading, setUploading] = useState(false);
-
-  const handleUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) return toast.error('Max file size is 5MB');
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append('images', file);
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/api/uploads`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
-      const data = await res.json();
-      if (!res.ok || !data.data?.length) throw new Error(data.message || 'Upload failed');
-      onChange(data.data[0]);
-      toast.success('Image uploaded');
-    } catch (err) { toast.error(err.message || 'Upload failed'); }
-    setUploading(false);
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="flex gap-2">
-        <input className="input-field flex-1" value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder="Image URL or upload below" />
-        <label className="btn-outline flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap">
-          <Upload size={14} /> {uploading ? 'Uploading...' : 'Upload'}
-          <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleUpload} disabled={uploading} />
-        </label>
-      </div>
-      {value && <img src={value} alt="Preview" className="w-full h-32 object-cover rounded-lg border border-border" />}
-    </div>
-  );
-}
-
 function ContentField({ entry, onChange }) {
   const { key: k, type, value } = entry;
   if (type === 'json') return <JSONEditor value={value} onChange={(v) => onChange(k, v)} />;
+  if (type === 'boolean') return (
+    <button type="button" onClick={() => onChange(!value)} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${value ? 'bg-success/10 text-success' : 'bg-error/10 text-error'}`}>
+      {value ? 'Yes' : 'No'}
+    </button>
+  );
   if (type === 'textarea') return <textarea className="input-field w-full" rows={3} value={value || ''} onChange={(e) => onChange(k, e.target.value)} />;
   if (type === 'number') return <input type="number" className="input-field w-full" value={value ?? ''} onChange={(e) => onChange(k, e.target.value === '' ? '' : Number(e.target.value))} />;
-  if (k.includes('image') || k.includes('hero_image') || k.includes('story_image')) return <ImageField value={value} onChange={(v) => onChange(k, v)} />;
+  if (type === 'image' || k.includes('image') || k.includes('hero_image') || k.includes('story_image') || k.includes('logo') || k.includes('banner') || k.includes('photo') || k.includes('icon')) return <ImageUpload value={value} onChange={(v) => onChange(k, v)} />;
   return <input className="input-field w-full" value={value ?? ''} onChange={(e) => onChange(k, e.target.value)} />;
 }
 
@@ -118,6 +91,8 @@ export default function ContentManager() {
   const [expandedSections, setExpandedSections] = useState({});
   const [historyModal, setHistoryModal] = useState(null);
   const [versions, setVersions] = useState([]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [addForm, setAddForm] = useState(EMPTY_FORM);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -183,6 +158,36 @@ export default function ContentManager() {
     } catch (err) { toast.error(err.message || 'Revert failed'); }
   };
 
+  const deleteField = async (key) => {
+    if (!window.confirm(`Delete content field "${key}"? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/admin/content/${key}`);
+      toast.success('Field deleted');
+      const nextEdits = { ...edits };
+      delete nextEdits[key];
+      setEdits(nextEdits);
+      load();
+    } catch (err) { toast.error(err.message || 'Delete failed'); }
+  };
+
+  const addField = async (e) => {
+    e.preventDefault();
+    const key = addForm.key.trim();
+    if (!key) return toast.error('Key is required');
+    try {
+      const payload = {
+        ...addForm,
+        key,
+        value: addForm.type === 'number' ? Number(addForm.value) : addForm.type === 'boolean' ? addForm.value === 'true' : addForm.type === 'json' ? JSON.parse(addForm.value || '[]') : addForm.value,
+      };
+      await api.put(`/admin/content/${key}`, payload);
+      toast.success('Content field created');
+      setShowAdd(false);
+      setAddForm(EMPTY_FORM);
+      load();
+    } catch (err) { toast.error(err.message || 'Failed to create'); }
+  };
+
   const sections = {};
   items.forEach((item) => {
     const sec = item.section || 'general';
@@ -204,6 +209,9 @@ export default function ContentManager() {
             {dirtyCount > 0 && (
               <span className="text-sm text-warning font-medium">{dirtyCount} unsaved change{dirtyCount > 1 ? 's' : ''}</span>
             )}
+            <button onClick={() => { setAddForm(EMPTY_FORM); setShowAdd(true); }} className="btn-outline flex items-center gap-2 text-sm">
+              <Plus size={16} /> Add Content Field
+            </button>
             <button onClick={saveAll} disabled={!dirtyCount} className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50">
               <Save size={16} /> Publish Changes
             </button>
@@ -272,9 +280,14 @@ export default function ContentManager() {
                             </div>
                             <ContentField entry={entry} onChange={onChange} />
                           </div>
-                          <button onClick={() => openHistory(entry.key)} className="p-2 text-text-muted hover:text-primary-dark rounded-lg hover:bg-bg transition-colors shrink-0" title="Version history">
-                            <History size={15} />
-                          </button>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button onClick={() => openHistory(entry.key)} className="p-2 text-text-muted hover:text-primary-dark rounded-lg hover:bg-bg transition-colors" title="Version history">
+                              <History size={15} />
+                            </button>
+                            <button onClick={() => deleteField(entry.key)} className="p-2 text-text-muted hover:text-error rounded-lg hover:bg-error/10 transition-colors" title="Delete field">
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -311,6 +324,76 @@ export default function ContentManager() {
             ))}
           </div>
         )}
+      </Modal>
+
+      <Modal
+        open={showAdd}
+        onClose={() => { setShowAdd(false); setAddForm(EMPTY_FORM); }}
+        title="Add Content Field"
+        size="sm"
+        footer={
+          <>
+            <button onClick={() => { setShowAdd(false); setAddForm(EMPTY_FORM); }} className="btn-outline text-sm">Cancel</button>
+            <button type="submit" form="add-field-form" className="btn-primary text-sm">Create Field</button>
+          </>
+        }
+      >
+        <form id="add-field-form" onSubmit={addField} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Field Key</label>
+            <input
+              className="input-field font-mono text-sm"
+              value={addForm.key}
+              onChange={(e) => setAddForm((prev) => ({ ...prev, key: e.target.value.replace(/[^a-z0-9_]/gi, '_').toLowerCase() }))}
+              placeholder="home_hero_heading"
+              required
+            />
+            <p className="text-xs text-text-muted mt-1">Used in code as <code className="font-mono">get('{addForm.key || 'your_key'}', fallback)</code></p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Label</label>
+            <input className="input-field" value={addForm.label} onChange={(e) => setAddForm((prev) => ({ ...prev, label: e.target.value }))} placeholder="Home hero heading" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Section</label>
+              <select className="input-field" value={addForm.section} onChange={(e) => setAddForm((prev) => ({ ...prev, section: e.target.value }))}>
+                {Object.keys(SECTION_META).map((s) => (
+                  <option key={s} value={s}>{SECTION_META[s]?.label || s}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Type</label>
+              <select className="input-field" value={addForm.type} onChange={(e) => setAddForm((prev) => ({ ...prev, type: e.target.value, value: e.target.value === 'json' ? '[]' : e.target.value === 'boolean' ? 'true' : '' }))}>
+                {FIELD_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Description</label>
+            <input className="input-field" value={addForm.description} onChange={(e) => setAddForm((prev) => ({ ...prev, description: e.target.value }))} placeholder="Optional helper text" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Default Value</label>
+            {addForm.type === 'textarea' ? (
+              <textarea className="input-field" rows={2} value={addForm.value} onChange={(e) => setAddForm((prev) => ({ ...prev, value: e.target.value }))} />
+            ) : addForm.type === 'boolean' ? (
+              <select className="input-field" value={addForm.value === 'true' ? 'true' : 'false'} onChange={(e) => setAddForm((prev) => ({ ...prev, value: e.target.value }))}>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            ) : addForm.type === 'number' ? (
+              <input type="number" className="input-field" value={addForm.value} onChange={(e) => setAddForm((prev) => ({ ...prev, value: e.target.value }))} />
+            ) : addForm.type === 'json' ? (
+              <textarea className="input-field font-mono text-xs" rows={3} value={addForm.value} onChange={(e) => setAddForm((prev) => ({ ...prev, value: e.target.value }))} spellCheck={false} />
+            ) : addForm.type === 'image' ? (
+              <ImageUpload value={addForm.value} onChange={(v) => setAddForm((prev) => ({ ...prev, value: v }))} previewHeight="h-24" />
+            ) : (
+              <input className="input-field" value={addForm.value} onChange={(e) => setAddForm((prev) => ({ ...prev, value: e.target.value }))} />
+            )}
+          </div>
+        </form>
       </Modal>
     </div>
   );
