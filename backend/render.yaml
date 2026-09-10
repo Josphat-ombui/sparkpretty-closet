@@ -32,3 +32,9 @@ services:
         value: https://sandbox.safaricom.co.ke
       - key: MPESA_CALLBACK_URL
         sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false

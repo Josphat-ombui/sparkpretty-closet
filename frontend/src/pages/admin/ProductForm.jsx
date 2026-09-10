@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, ImagePlus, UploadCloud, Loader2 } from 'lucide-react';
-import { api, API, API_BASE } from '../../lib/api';
+import { api, API } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/admin/ui.jsx';
 
@@ -91,8 +91,7 @@ export default function ProductForm() {
     for (const p of previews) {
       try {
         const urls = await uploadFiles([p.file]);
-        const serverUrl = `${API_BASE}${urls[0]}`;
-        replaceVariantImages(i, (imgs) => imgs.map((img) => (img === p.preview ? serverUrl : img)));
+        replaceVariantImages(i, (imgs) => imgs.map((img) => (img === p.preview ? urls[0] : img)));
       } catch (err) {
         replaceVariantImages(i, (imgs) => imgs.filter((img) => img !== p.preview));
         toast.error(`Upload failed: ${err.message}`);
