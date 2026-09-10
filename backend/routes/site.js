@@ -27,4 +27,25 @@ router.get('/settings', async (req, res) => {
   }
 });
 
+router.get('/content', async (req, res) => {
+  try {
+    const settings = await Setting.find({}, 'key value type label section description placeholder');
+    const data = {};
+    settings.forEach((s) => { data[s.key] = s.value; });
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.get('/content/:key', async (req, res) => {
+  try {
+    const setting = await Setting.findOne({ key: req.params.key });
+    if (!setting) return res.status(404).json({ success: false, message: 'Not found' });
+    res.json({ success: true, data: setting.value });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 export default router;

@@ -8,7 +8,8 @@ import Subscriber from '../models/Subscriber.js';
 import ContactMessage from '../models/ContactMessage.js';
 import Setting from '../models/Setting.js';
 import Banner from '../models/Banner.js';
-import { auth, adminOnly } from '../middleware/auth.js';
+import ContentVersion from '../models/ContentVersion.js';
+import { auth, adminOnly, editorOrAdmin } from '../middleware/auth.js';
 import { parsePagination } from '../utils/pagination.js';
 
 const router = Router();
@@ -149,7 +150,7 @@ router.put('/users/:id', asyncHandler(async (req, res) => {
   if (name !== undefined) update.name = name;
   if (email !== undefined) update.email = email;
   if (phone !== undefined) update.phone = phone;
-  if (role !== undefined && ['customer', 'admin'].includes(role)) update.role = role;
+  if (role !== undefined && ['customer', 'editor', 'admin'].includes(role)) update.role = role;
   if (addresses !== undefined) update.addresses = addresses;
   const user = await User.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true }).select('-password');
   if (!user) return res.status(404).json({ success: false, message: 'User not found' });
@@ -422,6 +423,150 @@ router.put('/banners/:id', asyncHandler(async (req, res) => {
 router.delete('/banners/:id', asyncHandler(async (req, res) => {
   await Banner.findByIdAndDelete(req.params.id);
   res.json({ success: true, data: {} });
+}));
+
+// ============================================================
+// Content Manager (site content with versioning)
+// ============================================================
+router.get('/content', editorOrAdmin, asyncHandler(async (req, res) => {
+  const { page, limit, skip } = parsePagination(req.query);
+  const search = (req.query.search || '').toString().trim();
+  const section = (req.query.section || '').toString().trim();
+  const type = (req.query.type || '').toString().trim();
+  const filter = {};
+  if (search) filter.$or = [{ key: new RegExp(search, 'i') }, { label: new RegExp(search, 'i') }];
+  if (section) filter.section = section;
+  if (type) filter.type = type;
+
+  const [items, total] = await Promise.all([
+    Setting.find(filter).sort({ section: 1, key: 1 }).skip(skip).limit(limit),
+    Setting.countDocuments(filter),
+  ]);
+  res.json({ success: true, data: { items, total, page, pages: Math.ceil(total / limit) || 1, limit } });
+}));
+
+router.get('/content/sections', editorOrAdmin, asyncHandler(async (req, res) => {
+  const sections = await Setting.distinct('section');
+  res.json({ success: true, data: sections.sort() });
+}));
+
+router.get('/content/:key', editorOrAdmin, asyncHandler(async (req, res) => {
+  const setting = await Setting.findOne({ key: req.params.key });
+  if (!setting) return res.status(404).json({ success: false, message: 'Content not found' });
+  res.json({ success: true, data: setting });
+}));
+
+router.put('/content/:key', editorOrAdmin, asyncHandler(async (req, res) => {
+  const { value, label, description, placeholder, section, type } = req.body;
+  const previous = await Setting.findOne({ key: req.params.key });
+
+  if (previous) {
+    await ContentVersion.create({
+      contentKey: req.params.key,
+      value: previous.value,
+      previousValue: previous.value,
+      updatedBy: req.user._id,
+      updatedByName: req.user.name,
+    });
+  }
+
+  const setting = await Setting.findOneAndUpdate(
+    { key: req.params.key },
+    {
+      $set: {
+        value,
+        ...(label !== undefined && { label }),
+        ...(description !== undefined && { description }),
+        ...(placeholder !== undefined && { placeholder }),
+        ...(section !== undefined && { section }),
+        ...(type !== undefined && { type }),
+        lastUpdatedBy: req.user._id,
+      },
+    },
+    { upsert: true, new: true, runValidators: true },
+  );
+  res.json({ success: true, data: setting });
+}));
+
+router.post('/content/bulk', editorOrAdmin, asyncHandler(async (req, res) => {
+  const entries = req.body || [];
+  const keys = [];
+  for (const entry of entries) {
+    if (!entry.key) continue;
+    const previous = await Setting.findOne({ key: entry.key });
+    if (previous && JSON.stringify(previous.value) !== JSON.stringify(entry.value)) {
+      await ContentVersion.create({
+        contentKey: entry.key,
+        value: entry.value,
+        previousValue: previous.value,
+        updatedBy: req.user._id,
+        updatedByName: req.user.name,
+      });
+    }
+    keys.push(entry.key);
+    await Setting.findOneAndUpdate(
+      { key: entry.key },
+      {
+        $set: {
+          value: entry.value,
+          type: entry.type || 'text',
+          group: entry.group || 'content',
+          label: entry.label || entry.key,
+          section: entry.section || 'general',
+          description: entry.description || '',
+          placeholder: entry.placeholder || '',
+          lastUpdatedBy: req.user._id,
+        },
+      },
+      { upsert: true, new: true },
+    );
+  }
+  res.json({ success: true, data: keys });
+}));
+
+router.delete('/content/:key', adminOnly, asyncHandler(async (req, res) => {
+  const setting = await Setting.findOneAndDelete({ key: req.params.key });
+  if (setting) {
+    await ContentVersion.create({
+      contentKey: req.params.key,
+      value: null,
+      previousValue: setting.value,
+      updatedBy: req.user._id,
+      updatedByName: req.user.name,
+    });
+  }
+  res.json({ success: true, data: {} });
+}));
+
+router.get('/content/:key/versions', editorOrAdmin, asyncHandler(async (req, res) => {
+  const versions = await ContentVersion.find({ contentKey: req.params.key })
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .populate('updatedBy', 'name email');
+  res.json({ success: true, data: versions });
+}));
+
+router.post('/content/:key/revert/:versionId', adminOnly, asyncHandler(async (req, res) => {
+  const version = await ContentVersion.findById(req.params.versionId);
+  if (!version) return res.status(404).json({ success: false, message: 'Version not found' });
+
+  const current = await Setting.findOne({ key: req.params.key });
+  if (current) {
+    await ContentVersion.create({
+      contentKey: req.params.key,
+      value: current.value,
+      previousValue: current.value,
+      updatedBy: req.user._id,
+      updatedByName: req.user.name,
+    });
+  }
+
+  const setting = await Setting.findOneAndUpdate(
+    { key: req.params.key },
+    { $set: { value: version.value, lastUpdatedBy: req.user._id } },
+    { upsert: true, new: true },
+  );
+  res.json({ success: true, data: setting });
 }));
 
 // ============================================================

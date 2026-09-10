@@ -35,3 +35,10 @@ export const adminOnly = (req, res, next) => {
   }
   next();
 };
+
+export const editorOrAdmin = (req, res, next) => {
+  if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'editor')) {
+    return res.status(403).json({ success: false, message: 'Editor or admin access required' });
+  }
+  next();
+};

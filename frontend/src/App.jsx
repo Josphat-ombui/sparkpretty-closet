@@ -33,9 +33,16 @@ const AdminSubscribers = lazy(() => import('./pages/admin/Subscribers'));
 const AdminContacts = lazy(() => import('./pages/admin/Contacts'));
 const AdminBanners = lazy(() => import('./pages/admin/Banners'));
 const AdminSettings = lazy(() => import('./pages/admin/Settings'));
+const AdminContentManager = lazy(() => import('./pages/admin/ContentManager'));
 
 const adminShell = (element) => (
   <ProtectedRoute adminOnly>
+    <AdminLayout>{element}</AdminLayout>
+  </ProtectedRoute>
+);
+
+const editorShell = (element) => (
+  <ProtectedRoute editorOrAdmin>
     <AdminLayout>{element}</AdminLayout>
   </ProtectedRoute>
 );
@@ -86,6 +93,7 @@ export default function App() {
           <Route path="/admin/contacts" element={adminShell(withSuspense(<AdminContacts />))} />
           <Route path="/admin/users" element={adminShell(withSuspense(<AdminUsers />))} />
           <Route path="/admin/banners" element={adminShell(withSuspense(<AdminBanners />))} />
+          <Route path="/admin/content" element={editorShell(withSuspense(<AdminContentManager />))} />
           <Route path="/admin/settings" element={adminShell(withSuspense(<AdminSettings />))} />
         </Routes>
       </main>

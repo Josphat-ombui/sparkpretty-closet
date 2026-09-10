@@ -37,10 +37,10 @@ export default function Users() {
   };
 
   const toggleRole = async (u) => {
-    const next = u.role === 'admin' ? 'customer' : 'admin';
+    const next = u.role === 'admin' ? 'customer' : u.role === 'editor' ? 'admin' : 'editor';
     try {
       await api.put(`/admin/users/${u._id}`, { role: next });
-      toast.success(next === 'admin' ? 'Promoted to admin' : 'Removed admin access');
+      toast.success(`Role changed to ${next}`);
       load(users.page);
     } catch (err) {
       toast.error(err.message || 'Update failed');
@@ -102,6 +102,7 @@ export default function Users() {
           <select value={role} onChange={(e) => setRole(e.target.value)} className="input-field w-auto">
             <option value="">All roles</option>
             <option value="customer">Customer</option>
+            <option value="editor">Editor</option>
             <option value="admin">Admin</option>
           </select>
           <button onClick={() => setQuery(search)} className="btn-outline text-sm px-4">Search</button>
@@ -142,15 +143,15 @@ export default function Users() {
                       {u.phone && <p className="text-xs text-text-muted">{u.phone}</p>}
                     </td>
                     <td className="px-5 py-3">
-                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${u.role === 'admin' ? 'bg-primary/10 text-primary-dark' : 'bg-bg text-text-light'}`}>
-                        {u.role === 'admin' ? 'Admin' : 'Customer'}
+                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${u.role === 'admin' ? 'bg-primary/10 text-primary-dark' : u.role === 'editor' ? 'bg-warning/10 text-warning' : 'bg-bg text-text-light'}`}>
+                        {u.role === 'admin' ? 'Admin' : u.role === 'editor' ? 'Editor' : 'Customer'}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-xs text-text-light">{new Date(u.createdAt).toLocaleDateString()}</td>
                     <td className="px-5 py-3">
                       <div className="flex justify-end gap-1.5">
                         <button onClick={() => openEdit(u)} className="p-2 rounded-lg text-text-light hover:text-primary hover:bg-primary/10 transition-colors" title="Edit"><Pencil size={15} /></button>
-                        <button onClick={() => toggleRole(u)} className={`p-2 rounded-lg transition-colors ${u.role === 'admin' ? 'text-text-light hover:text-warning hover:bg-warning/10' : 'text-text-light hover:text-primary-dark hover:bg-primary/10'}`} title={u.role === 'admin' ? 'Remove admin' : 'Make admin'}>
+                        <button onClick={() => toggleRole(u)} className={`p-2 rounded-lg transition-colors ${u.role === 'admin' ? 'text-text-light hover:text-warning hover:bg-warning/10' : 'text-text-light hover:text-primary-dark hover:bg-primary/10'}`} title={u.role === 'admin' ? 'Remove admin' : u.role === 'editor' ? 'Promote to admin' : 'Make editor'}>
                           {u.role === 'admin' ? <ShieldOff size={15} /> : <Shield size={15} />}
                         </button>
                         <button onClick={() => deleteUser(u)} className="p-2 rounded-lg text-text-light hover:text-error hover:bg-error/10 transition-colors" title="Delete"><Trash2 size={15} /></button>
@@ -197,6 +198,7 @@ export default function Users() {
             <label className="block text-sm font-medium mb-1.5">Role</label>
             <select className="input-field" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
               <option value="customer">Customer</option>
+              <option value="editor">Editor</option>
               <option value="admin">Admin</option>
             </select>
           </div>

@@ -8,22 +8,15 @@ import {
   Mail, MessageCircle, Phone,
 } from 'lucide-react';
 import SEO from '../components/SEO';
+import { useContent } from '../context/ContentContext';
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.6 } }) };
 
-const milestones = [
-  { year: '2020', title: 'The Spark', desc: 'Sparkpretty Closet was born from a passion for making every woman feel beautiful and confident.' },
-  { year: '2021', title: 'Growing Community', desc: 'Reached 500+ happy customers across Nairobi and Mombasa. Expanded our collection to 100+ styles.' },
-  { year: '2023', title: 'Nationwide Delivery', desc: 'Expanded to serve all of Kenya. Introduced M-Pesa checkout for seamless payments.' },
-  { year: '2025', title: '2,000+ Customers', desc: 'Celebrating over 2,000 satisfied customers. Launched our blog and style guides.' },
-  { year: '2026', title: 'The Future', desc: 'Aiming to become Africa\'s leading fashion destination. Sustainability initiatives and new collections.' },
-];
-
-const team = [
-  { name: 'Mercy Wanjiku', role: 'Founder & Creative Director', bio: 'Passionate about African fashion and empowering women through style. Mercy curates every collection with love.', initials: 'MW', color: '#FFB6C1' },
-  { name: 'Faith Akinyi', role: 'Head of Operations', bio: 'Ensures every order is packed with care and delivered on time. Faith makes the magic happen behind the scenes.', initials: 'FA', color: '#FF8FA3' },
-  { name: 'Grace Muthoni', role: 'Lead Stylist', bio: 'Creates stunning lookbooks and style guides to help our customers look their absolute best.', initials: 'GM', color: '#FFB6C1' },
-];
+const safeJSON = (val, fallback) => {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') { try { return JSON.parse(val); } catch {} }
+  return fallback;
+};
 
 const values = [
   { icon: <Award size={28} />, title: 'Quality First', desc: 'Every piece is hand-selected and tested for quality, comfort, and durability before it reaches you.' },
@@ -41,14 +34,16 @@ const craftsmanshipSteps = [
   { icon: <Sparkles size={24} />, title: 'Presentation', desc: 'Beautiful packaging and careful handling so your order arrives in perfect condition.' },
 ];
 
-const testimonials = [
-  { name: 'Amina W.', location: 'Nairobi', text: 'Sparkpretty has completely transformed my wardrobe. The quality is incredible and the styles are always on point!', rating: 5 },
-  { name: 'Faith M.', location: 'Mombasa', text: 'I was nervous ordering online, but the experience was flawless. The dress fit perfectly and the M-Pesa checkout was so easy.', rating: 5 },
-  { name: 'Grace N.', location: 'Kisumu', text: 'Fast delivery, beautiful packaging, and the clothes look exactly like the photos. I am a customer for life!', rating: 5 },
-  { name: 'Wanjiku K.', location: 'Nakuru', text: 'The crossbody bag is my daily essential now. So chic and fits everything I need. Highly recommend Sparkpretty!', rating: 5 },
-];
-
 export default function About() {
+  const { get } = useContent();
+
+  const milestones = safeJSON(get('about_milestones', []), []);
+  const team = safeJSON(get('about_team', []), []);
+  const testimonials = safeJSON(get('about_testimonials', []), []);
+
+  const siteName = get('site_name', 'Sparkpretty Closet');
+  const siteUrl = get('site_url', 'https://sparkpretty.co.ke');
+
   return (
     <div>
       <SEO
@@ -58,8 +53,8 @@ export default function About() {
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'Organization',
-          name: 'Sparkpretty Closet',
-          url: 'https://sparkpretty.co.ke',
+          name: siteName,
+          url: siteUrl,
           description: "Kenya's premier women's fashion destination",
           address: { '@type': 'PostalAddress', addressCountry: 'KE' },
         }}
@@ -83,15 +78,13 @@ export default function About() {
             initial="hidden" animate="visible" variants={fadeUp} custom={1}
             className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight"
           >
-            Fashion That Speaks <br />
-            <span className="text-white/90">Your Story</span>
+            {get('about_hero_heading', 'Fashion That Speaks Your Story')}
           </motion.h1>
           <motion.p
             initial="hidden" animate="visible" variants={fadeUp} custom={2}
             className="text-white/80 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed"
           >
-            We believe every woman deserves to feel beautiful, confident, and radiant in what she wears.
-            Sparkpretty Closet curates fashion that celebrates your unique sparkle.
+            {get('about_hero_text', 'We believe every woman deserves to feel beautiful, confident, and radiant in what she wears. Sparkpretty Closet curates fashion that celebrates your unique sparkle.')}
           </motion.p>
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3} className="flex flex-wrap gap-4 justify-center">
             <Link to="/shop" className="bg-white text-text px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-button inline-flex items-center gap-2 text-lg">
@@ -114,36 +107,30 @@ export default function About() {
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
               <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">How It Started</span>
               <h2 id="brand-story-heading" className="font-heading text-3xl md:text-5xl font-bold mt-2 mb-6 leading-tight">
-                Born from a <span className="text-gradient">Passion</span> for Fashion
+                {get('about_story_heading', 'Born from a Passion for Fashion')}
               </h2>
               <p className="text-text-light text-lg leading-relaxed mb-6">
-                Sparkpretty Closet was founded in 2020 with a simple dream: to bring beautiful, high-quality fashion
-                to every Kenyan woman. What started as a small collection of hand-picked pieces has grown into a
-                trusted fashion destination serving thousands of customers across the country.
+                {get('about_story_para1', 'Sparkpretty Closet was founded in 2020 with a simple dream: to bring beautiful, high-quality fashion to every Kenyan woman. What started as a small collection of hand-picked pieces has grown into a trusted fashion destination serving thousands of customers across the country.')}
               </p>
               <p className="text-text-light text-lg leading-relaxed mb-6">
-                Our founder, Mercy Wanjiku, noticed that many women struggled to find fashion that was both
-                stylish and affordable. She set out to create a brand that celebrates African femininity while
-                embracing global trends — a brand that makes every woman feel like the best version of herself.
+                {get('about_story_para2', "Our founder, Mercy Wanjiku, noticed that many women struggled to find fashion that was both stylish and affordable. She set out to create a brand that celebrates African femininity while embracing global trends — a brand that makes every woman feel like the best version of herself.")}
               </p>
               <p className="text-text-light text-lg leading-relaxed mb-8">
-                Today, we curate collections that blend elegance with everyday wearability. From stunning dresses
-                to statement accessories, every piece in our collection is chosen with love, quality, and your
-                unique style in mind.
+                {get('about_story_para3', 'Today, we curate collections that blend elegance with everyday wearability. From stunning dresses to statement accessories, every piece in our collection is chosen with love, quality, and your unique style in mind.')}
               </p>
               <div className="flex items-center gap-8">
                 <div className="text-center">
-                  <p className="font-heading text-3xl font-bold text-primary-dark">2,000+</p>
+                  <p className="font-heading text-3xl font-bold text-primary-dark">{get('about_stat_customers', '2,000+')}</p>
                   <p className="text-text-light text-sm">Happy Customers</p>
                 </div>
                 <div className="w-px h-12 bg-border" />
                 <div className="text-center">
-                  <p className="font-heading text-3xl font-bold text-primary-dark">100+</p>
+                  <p className="font-heading text-3xl font-bold text-primary-dark">{get('about_stat_styles', '100+')}</p>
                   <p className="text-text-light text-sm">Unique Styles</p>
                 </div>
                 <div className="w-px h-12 bg-border" />
                 <div className="text-center">
-                  <p className="font-heading text-3xl font-bold text-primary-dark">47</p>
+                  <p className="font-heading text-3xl font-bold text-primary-dark">{get('about_stat_counties', '47')}</p>
                   <p className="text-text-light text-sm">Counties Served</p>
                 </div>
               </div>
@@ -197,12 +184,10 @@ export default function About() {
               </div>
               <h3 className="font-heading text-2xl font-bold mb-4">Our Mission</h3>
               <p className="text-text-light text-lg leading-relaxed mb-4">
-                To make stunning, high-quality fashion accessible to every Kenyan woman. We bridge the gap between
-                style and affordability, bringing you curated collections that celebrate your unique beauty.
+                {get('about_mission', 'To make stunning, high-quality fashion accessible to every Kenyan woman. We bridge the gap between style and affordability, bringing you curated collections that celebrate your unique beauty.')}
               </p>
               <p className="text-text-light leading-relaxed">
-                From everyday essentials to statement pieces, we're here to ensure you always have something
-                beautiful to wear — delivered right to your doorstep with a smile.
+                {get('about_mission_detail', "From everyday essentials to statement pieces, we're here to ensure you always have something beautiful to wear — delivered right to your doorstep with a smile.")}
               </p>
             </motion.div>
             <motion.div
@@ -217,12 +202,10 @@ export default function About() {
               </div>
               <h3 className="font-heading text-2xl font-bold mb-4">Our Vision</h3>
               <p className="text-text-light text-lg leading-relaxed mb-4">
-                To become Africa's leading fashion destination for shoes, clothes, and bags — a brand that
-                empowers women across the continent to express their unique style with confidence.
+                {get('about_vision', "To become Africa's leading fashion destination for shoes, clothes, and bags — a brand that empowers women across the continent to express their unique style with confidence.")}
               </p>
               <p className="text-text-light leading-relaxed">
-                We envision a world where every woman has access to beautiful, sustainable fashion that makes
-                her feel extraordinary, regardless of where she lives or what her budget is.
+                {get('about_vision_detail', 'We envision a world where every woman has access to beautiful, sustainable fashion that makes her feel extraordinary, regardless of where she lives or what her budget is.')}
               </p>
             </motion.div>
           </div>
@@ -426,7 +409,7 @@ export default function About() {
                 {[...Array(5)].map((_, i) => <Star key={i} size={20} className="text-yellow-400 fill-yellow-400" />)}
               </div>
               <span className="font-bold text-lg">4.9</span>
-              <span className="text-text-light text-sm">/ 5 average from 2,000+ reviews</span>
+              <span className="text-text-light text-sm">/ 5 average from {get('about_stat_customers', '2,000+')} reviews</span>
             </div>
           </div>
         </div>

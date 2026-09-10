@@ -3,7 +3,7 @@ import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Package, ShoppingCart, Users, MessageSquare,
   FileText, PenLine, Mail, Image, Settings, LogOut, Menu, X,
-  Heart, ExternalLink, Store,
+  Heart, ExternalLink, Store, Edit3,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme, THEMES, THEME_ORDER } from '../context/ThemeContext';
@@ -27,6 +27,7 @@ const navSections = [
   {
     label: 'Content',
     items: [
+      { to: '/admin/content', label: 'Content Manager', icon: Edit3 },
       { to: '/admin/blog', label: 'Blog Posts', icon: FileText },
       { to: '/admin/banners', label: 'Banners', icon: Image },
       { to: '/admin/settings', label: 'Site Settings', icon: Settings },
@@ -61,13 +62,13 @@ export default function AdminLayout({ children }) {
   const SidebarContent = (
     <div className="flex flex-col h-full bg-white border-r border-border">
       <div className="px-5 py-5 border-b border-border flex items-center justify-between">
-        <Link to="/admin" className="flex items-center gap-2">
+        <Link to={user?.role === 'editor' ? '/admin/content' : '/admin'} className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-lg gradient-hero flex items-center justify-center">
             <Heart size={18} className="text-white" />
           </div>
           <div>
             <p className="font-heading font-bold text-lg leading-none">Sparkpretty</p>
-            <p className="text-xs text-text-muted mt-1 tracking-wide uppercase">Admin Panel</p>
+            <p className="text-xs text-text-muted mt-1 tracking-wide uppercase">{user?.role === 'editor' ? 'Editor Panel' : 'Admin Panel'}</p>
           </div>
         </Link>
         <button onClick={() => setOpen(false)} className="lg:hidden p-1 text-text-light hover:text-text">
@@ -76,7 +77,12 @@ export default function AdminLayout({ children }) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
-        {navSections.map((section) => (
+        {navSections.filter((section) => {
+          if (user?.role === 'editor') {
+            return section.label === 'Content';
+          }
+          return true;
+        }).map((section) => (
           <div key={section.label}>
             <p className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-widest text-text-muted">{section.label}</p>
             <nav className="space-y-0.5">

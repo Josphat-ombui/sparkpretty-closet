@@ -6,6 +6,7 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ContentProvider } from './context/ContentContext';
 import GoogleAnalytics from './components/GoogleAnalytics';
 import './index.css';
 
@@ -16,8 +17,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <ThemeProvider>
           <AuthProvider>
             <CartProvider>
-              <GoogleAnalytics />
-              <App />
+              <ContentProvider>
+                <GoogleAnalytics />
+                <App />
+              </ContentProvider>
             </CartProvider>
           </AuthProvider>
         </ThemeProvider>

@@ -1,15 +1,22 @@
 import { Helmet } from 'react-helmet-async';
+import { useContent } from '../context/ContentContext';
 
-const SITE_NAME = 'Sparkpretty Closet';
-const DEFAULT_DESCRIPTION = "Kenya's premier women's fashion destination. Curated dresses, tops, shoes & accessories with M-Pesa checkout.";
-const DEFAULT_IMAGE = 'https://placehold.co/1200x630/FFB6C1/000000?text=Sparkpretty+Closet';
-const SITE_URL = 'https://sparkpretty.co.ke';
+const FALLBACK_NAME = 'Sparkpretty Closet';
+const FALLBACK_DESC = "Kenya's premier women's fashion destination. Curated dresses, tops, shoes & accessories with M-Pesa checkout.";
+const FALLBACK_IMAGE = 'https://placehold.co/1200x630/FFB6C1/000000?text=Sparkpretty+Closet';
+const FALLBACK_URL = 'https://sparkpretty.co.ke';
 
 export default function SEO({ title, description, image, url, type = 'website', jsonLd }) {
-  const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} — Women's Fashion`;
-  const metaDesc = description || DEFAULT_DESCRIPTION;
-  const metaImage = image || DEFAULT_IMAGE;
-  const metaUrl = url ? `${SITE_URL}${url}` : SITE_URL;
+  const { get, loaded } = useContent();
+  const siteName = loaded ? get('site_name', FALLBACK_NAME) : FALLBACK_NAME;
+  const siteUrl = loaded ? get('site_url', FALLBACK_URL) : FALLBACK_URL;
+  const defaultDesc = loaded ? get('site_description', FALLBACK_DESC) : FALLBACK_DESC;
+  const defaultImage = loaded ? get('site_og_image', FALLBACK_IMAGE) : FALLBACK_IMAGE;
+
+  const fullTitle = title ? `${title} | ${siteName}` : `${siteName} — Women's Fashion`;
+  const metaDesc = description || defaultDesc;
+  const metaImage = image || defaultImage;
+  const metaUrl = url ? `${siteUrl}${url}` : siteUrl;
 
   return (
     <Helmet>
@@ -22,7 +29,7 @@ export default function SEO({ title, description, image, url, type = 'website', 
       <meta property="og:description" content={metaDesc} />
       <meta property="og:image" content={metaImage} />
       <meta property="og:url" content={metaUrl} />
-      <meta property="og:site_name" content={SITE_NAME} />
+      <meta property="og:site_name" content={siteName} />
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
@@ -37,20 +44,24 @@ export default function SEO({ title, description, image, url, type = 'website', 
 }
 
 export function ProductSEO({ product }) {
+  const { get, loaded } = useContent();
+  const siteName = loaded ? get('site_name', 'Sparkpretty Closet') : 'Sparkpretty Closet';
+  const siteUrl = loaded ? get('site_url', 'https://sparkpretty.co.ke') : 'https://sparkpretty.co.ke';
+  const defaultImage = 'https://placehold.co/1200x630/FFB6C1/000000?text=Sparkpretty+Closet';
   const variant = product?.variants?.[0] || {};
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product?.name,
     description: product?.description,
-    image: variant.images?.[0] || DEFAULT_IMAGE,
-    brand: { '@type': 'Brand', name: SITE_NAME },
+    image: variant.images?.[0] || defaultImage,
+    brand: { '@type': 'Brand', name: siteName },
     offers: {
       '@type': 'Offer',
       price: variant.salePrice || variant.price,
       priceCurrency: 'KES',
       availability: variant.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      url: `${SITE_URL}/product/${product?.slug}`,
+      url: `${siteUrl}/product/${product?.slug}`,
     },
   };
 
@@ -67,16 +78,20 @@ export function ProductSEO({ product }) {
 }
 
 export function BlogSEO({ post }) {
+  const { get, loaded } = useContent();
+  const siteName = loaded ? get('site_name', 'Sparkpretty Closet') : 'Sparkpretty Closet';
+  const siteUrl = loaded ? get('site_url', 'https://sparkpretty.co.ke') : 'https://sparkpretty.co.ke';
+  const defaultImage = 'https://placehold.co/1200x630/FFB6C1/000000?text=Sparkpretty+Closet';
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post?.title,
     description: post?.excerpt,
-    image: post?.coverImage || DEFAULT_IMAGE,
-    author: { '@type': 'Organization', name: SITE_NAME },
+    image: post?.coverImage || defaultImage,
+    author: { '@type': 'Organization', name: siteName },
     datePublished: post?.createdAt,
     dateModified: post?.updatedAt,
-    url: `${SITE_URL}/blog/${post?.slug}`,
+    url: `${siteUrl}/blog/${post?.slug}`,
   };
 
   return (

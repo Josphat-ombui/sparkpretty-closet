@@ -10,32 +10,43 @@ import {
 import SEO from '../components/SEO';
 import { api } from '../lib/api';
 import toast from 'react-hot-toast';
+import { useContent } from '../context/ContentContext';
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.6 } }) };
 
-const faqs = [
-  { q: 'How long does shipping take?', a: 'Standard shipping takes 2-5 business days within Kenya. Express delivery to Nairobi is available for next-day delivery on orders placed before 2 PM.' },
-  { q: 'What is your return policy?', a: 'We offer a 7-day hassle-free return policy. Items must be unworn, unwashed, with tags attached. Contact us to initiate a return.' },
-  { q: 'How do I find my size?', a: 'Check our comprehensive Size Guide for detailed measurements in centimeters. If you\'re between sizes, we recommend sizing up for comfort.' },
-  { q: 'Do you offer international shipping?', a: 'Currently we ship within Kenya. We\'re working on expanding to East African countries soon! Stay tuned.' },
-  { q: 'How do I pay with M-Pesa?', a: 'At checkout, select M-Pesa as your payment method. You\'ll receive an STK push prompt on your phone — just enter your PIN to complete the payment.' },
-  { q: 'Can I track my order?', a: 'Yes! Once your order is shipped, you\'ll receive a confirmation via SMS and email with tracking details.' },
-];
-
-const socialLinks = [
-  { name: 'Instagram', icon: <Instagram size={22} />, url: 'https://instagram.com/sparkpretty', color: '#E4405F' },
-  { name: 'Facebook', icon: <Facebook size={22} />, url: 'https://facebook.com/sparkpretty', color: '#1877F2' },
-  { name: 'Twitter', icon: <Twitter size={22} />, url: 'https://twitter.com/sparkpretty', color: '#1DA1F2' },
-  { name: 'TikTok', icon: <span className="font-bold text-lg">T</span>, url: 'https://tiktok.com/@sparkpretty', color: '#000000' },
-];
+const safeJSON = (val, fallback) => {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') { try { return JSON.parse(val); } catch {} }
+  return fallback;
+};
 
 export default function Contact() {
+  const { get } = useContent();
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
   const [email, setEmail] = useState('');
   const [errors, setErrors] = useState({});
+
+  const faqs = safeJSON(get('contact_faqs', []), []);
+
+  const socialLinks = [
+    { name: 'Instagram', icon: <Instagram size={22} />, url: get('social_instagram', 'https://instagram.com/sparkpretty'), color: '#E4405F' },
+    { name: 'Facebook', icon: <Facebook size={22} />, url: get('social_facebook', 'https://facebook.com/sparkpretty'), color: '#1877F2' },
+    { name: 'Twitter', icon: <Twitter size={22} />, url: get('social_twitter', 'https://twitter.com/sparkpretty'), color: '#1DA1F2' },
+    { name: 'TikTok', icon: <span className="font-bold text-lg">T</span>, url: get('social_tiktok', 'https://tiktok.com/@sparkpretty'), color: '#000000' },
+  ];
+
+  const contactPhone = get('contact_phone', '0729366991');
+  const contactWhatsApp = get('contact_whatsapp', '254729366991');
+  const contactEmail = get('contact_email', 'hello@sparkpretty.co.ke');
+  const contactLocation = get('contact_location', 'Nairobi, Kenya');
+  const contactBusinessHours = get('contact_business_hours', 'Mon-Sat, 8AM-8PM');
+  const contactMapsEmbed = get('contact_maps_embed', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15955.0!2d36.8219!3d-1.2921!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f173c01e3e3e3%3A0x1234567890abcdef!2sNairobi%2C%20Kenya!5e0!3m2!1sen!2ske!4v1');
+  const contactHeroHeading = get('contact_hero_heading', "We'd Love to Hear From You");
+  const contactHeroText = get('contact_hero_text', 'Reach out for inquiries, support, or collaborations. Our team is ready to help you find your perfect style.');
+  const contactHoursDetailed = safeJSON(get('contact_hours_detailed', []), []);
 
   const validate = () => {
     const errs = {};
@@ -101,20 +112,19 @@ export default function Contact() {
               initial="hidden" animate="visible" variants={fadeUp} custom={1}
               className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
             >
-              We'd Love to <br />
-              <span className="text-white/90">Hear From You</span>
+              {contactHeroHeading}
             </motion.h1>
             <motion.p
               initial="hidden" animate="visible" variants={fadeUp} custom={2}
               className="text-white/80 text-lg md:text-xl mb-8 max-w-lg"
             >
-              Reach out for inquiries, support, or collaborations. Our team is ready to help you find your perfect style.
+              {contactHeroText}
             </motion.p>
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3} className="flex flex-wrap gap-4">
-              <a href="tel:0729366991" className="bg-white text-text px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-button inline-flex items-center gap-2">
+              <a href={`tel:${contactPhone}`} className="bg-white text-text px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-button inline-flex items-center gap-2">
                 <Phone size={18} /> Call Now
               </a>
-              <a href="https://wa.me/254729366991" target="_blank" rel="noopener noreferrer" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all inline-flex items-center gap-2">
+              <a href={`https://wa.me/${contactWhatsApp}`} target="_blank" rel="noopener noreferrer" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all inline-flex items-center gap-2">
                 <MessageCircle size={18} /> WhatsApp Us
               </a>
             </motion.div>
@@ -129,10 +139,10 @@ export default function Contact() {
         <div className="max-w-7xl mx-auto">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 -mt-20 relative z-10">
             {[
-              { icon: <Phone size={24} />, title: 'Call Us', detail: '0729366991', sub: 'Mon-Sat, 8AM-8PM', link: 'tel:0729366991', color: '#FFB6C1' },
-              { icon: <MessageCircle size={24} />, title: 'WhatsApp', detail: 'Chat with us', sub: 'Instant replies', link: 'https://wa.me/254729366991', color: '#25D366' },
-              { icon: <Mail size={24} />, title: 'Email', detail: 'hello@sparkpretty.co.ke', sub: 'Response within 24hrs', link: 'mailto:hello@sparkpretty.co.ke', color: '#FF8FA3' },
-              { icon: <MapPin size={24} />, title: 'Location', detail: 'Nairobi, Kenya', sub: 'Serving all 47 counties', link: null, color: '#FFB6C1' },
+              { icon: <Phone size={24} />, title: 'Call Us', detail: contactPhone, sub: contactBusinessHours, link: `tel:${contactPhone}`, color: '#FFB6C1' },
+              { icon: <MessageCircle size={24} />, title: 'WhatsApp', detail: 'Chat with us', sub: 'Instant replies', link: `https://wa.me/${contactWhatsApp}`, color: '#25D366' },
+              { icon: <Mail size={24} />, title: 'Email', detail: contactEmail, sub: 'Response within 24hrs', link: `mailto:${contactEmail}`, color: '#FF8FA3' },
+              { icon: <MapPin size={24} />, title: 'Location', detail: contactLocation, sub: 'Serving all 47 counties', link: null, color: '#FFB6C1' },
             ].map((card, i) => (
               <motion.div
                 key={card.title}
@@ -261,7 +271,7 @@ export default function Contact() {
               <div className="rounded-card overflow-hidden shadow-card h-72">
                 <iframe
                   title="Sparkpretty Closet Location"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15955.0!2d36.8219!3d-1.2921!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f173c01e3e3e3%3A0x1234567890abcdef!2sNairobi%2C%20Kenya!5e0!3m2!1sen!2ske!4v1"
+                  src={contactMapsEmbed}
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
@@ -277,9 +287,20 @@ export default function Contact() {
                   <Clock size={18} className="text-primary-dark" /> Support Hours
                 </h3>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-text-light">Monday - Friday</span><span className="font-medium">8:00 AM - 8:00 PM</span></div>
-                  <div className="flex justify-between"><span className="text-text-light">Saturday</span><span className="font-medium">9:00 AM - 6:00 PM</span></div>
-                  <div className="flex justify-between"><span className="text-text-light">Sunday</span><span className="font-medium">10:00 AM - 4:00 PM</span></div>
+                  {contactHoursDetailed.length > 0 ? (
+                    contactHoursDetailed.map((h, i) => (
+                      <div key={i} className="flex justify-between">
+                        <span className="text-text-light">{h.day}</span>
+                        <span className="font-medium">{h.hours}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      <div className="flex justify-between"><span className="text-text-light">Monday - Friday</span><span className="font-medium">8:00 AM - 8:00 PM</span></div>
+                      <div className="flex justify-between"><span className="text-text-light">Saturday</span><span className="font-medium">9:00 AM - 6:00 PM</span></div>
+                      <div className="flex justify-between"><span className="text-text-light">Sunday</span><span className="font-medium">10:00 AM - 4:00 PM</span></div>
+                    </>
+                  )}
                   <div className="pt-2 border-t border-border flex justify-between">
                     <span className="text-text-light">WhatsApp</span>
                     <span className="font-medium text-success">Available 24/7</span>
@@ -301,7 +322,7 @@ export default function Contact() {
                     <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary-dark group-hover:bg-primary group-hover:text-white transition-all"><Sparkles size={14} /></div>
                     Browse Collection
                   </Link>
-                  <a href="https://wa.me/254729366991" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-text-light hover:text-primary-dark transition-colors group">
+                  <a href={`https://wa.me/${contactWhatsApp}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-text-light hover:text-primary-dark transition-colors group">
                     <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary-dark group-hover:bg-primary group-hover:text-white transition-all"><MessageCircle size={14} /></div>
                     Live Chat on WhatsApp
                   </a>
@@ -354,7 +375,7 @@ export default function Contact() {
           </div>
           <div className="text-center mt-8">
             <p className="text-text-light text-sm mb-3">Still have questions?</p>
-            <a href="https://wa.me/254729366991" target="_blank" rel="noopener noreferrer" className="btn-outline inline-flex items-center gap-2">
+            <a href={`https://wa.me/${contactWhatsApp}`} target="_blank" rel="noopener noreferrer" className="btn-outline inline-flex items-center gap-2">
               <MessageCircle size={16} /> Chat on WhatsApp
             </a>
           </div>
@@ -440,7 +461,7 @@ export default function Contact() {
               Whether you need styling advice, order help, or just want to say hi — we're all ears.
             </p>
             <div className="flex flex-wrap gap-4 justify-center mb-10">
-              <a href="https://wa.me/254729366991" target="_blank" rel="noopener noreferrer" className="bg-white text-text px-8 py-4 rounded-lg font-bold hover:bg-white/90 transition-all shadow-button text-lg inline-flex items-center gap-2">
+              <a href={`https://wa.me/${contactWhatsApp}`} target="_blank" rel="noopener noreferrer" className="bg-white text-text px-8 py-4 rounded-lg font-bold hover:bg-white/90 transition-all shadow-button text-lg inline-flex items-center gap-2">
                 <MessageCircle size={18} /> Chat Now
               </a>
               <Link to="/shop" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all text-lg inline-flex items-center gap-2">

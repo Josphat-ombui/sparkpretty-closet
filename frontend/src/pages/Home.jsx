@@ -10,6 +10,7 @@ import {
 import { api, formatPrice } from '../lib/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useContent } from '../context/ContentContext';
 import SEO from '../components/SEO';
 import toast from 'react-hot-toast';
 
@@ -25,24 +26,6 @@ const categories = [
   { name: 'Accessories', slug: 'accessories', color: '#FFE0E6', desc: 'The finishing touches', image: '/images/accessories-1.jpeg' },
 ];
 
-const testimonials = [
-  { name: 'Amina W.', location: 'Nairobi', rating: 5, text: "I've never felt so confident in my outfits! The Rose Garden Midi Dress is absolutely stunning. Sparkpretty has become my go-to for every occasion.", avatar: 'A', product: 'Rose Garden Midi Dress' },
-  { name: 'Faith M.', location: 'Mombasa', rating: 5, text: "The quality is incredible for the price. I ordered 3 dresses and they all fit perfectly. The M-Pesa checkout was so easy!", avatar: 'F', product: 'Elegant Wrap Dress' },
-  { name: 'Grace N.', location: 'Kisumu', rating: 5, text: "Fast delivery, beautiful packaging, and the clothes look exactly like the photos. I'm a customer for life!", avatar: 'G', product: 'Sunset Maxi Dress' },
-  { name: 'Wanjiku K.', location: 'Nakuru', rating: 5, text: "The crossbody bag is my daily essential now. So chic and fits everything I need. Highly recommend Sparkpretty!", avatar: 'W', product: 'Quilted Crossbody Bag' },
-  { name: 'Mercy O.', location: 'Eldoret', rating: 5, text: "I was skeptical ordering online but the size guide was spot-on. The silk blouse is gorgeous. Will definitely order again!", avatar: 'M', product: 'Silk Touch Blouse' },
-  { name: 'Nancy A.', location: 'Thika', rating: 5, text: "My friends keep asking where I got my outfit. The quality rivals brands I've paid double for. Thank you Sparkpretty!", avatar: 'N', product: 'Oversized Knit Sweater' },
-];
-
-const galleryImages = [
-  { alt: 'Woman in Rose Garden Midi Dress at brunch', image: '/images/hero-2.jpeg' },
-  { alt: 'Style flatlay with crossbody bag and accessories', image: '/images/accessories-2.jpeg' },
-  { alt: 'Model wearing Elegant Wrap Dress at office', image: '/images/hero-4.jpeg' },
-  { alt: 'Summer look with Sunset Maxi Dress on beach', image: '/images/dresses-2.jpeg' },
-  { alt: 'Street style with canvas sneakers and jeans', image: '/images/shoes-7.jpeg' },
-  { alt: 'Evening look with strappy heels and clutch', image: '/images/shoes-5.jpeg' },
-];
-
 const colorSwatches = [
   { color: '#FFB6C1', name: 'Rose' },
   { color: '#FFB6C1', name: 'Sky' },
@@ -51,6 +34,12 @@ const colorSwatches = [
   { color: '#8D6E63', name: 'Khaki' },
   { color: '#7B1FA2', name: 'Purple' },
 ];
+
+const safeJSON = (val, fallback) => {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string') { try { return JSON.parse(val); } catch {} }
+  return fallback;
+};
 
 export default function Home() {
   const [featured, setFeatured] = useState([]);
@@ -62,6 +51,10 @@ export default function Home() {
   const [wishlist, setWishlist] = useState([]);
   const { addItem } = useCart();
   const { user } = useAuth();
+  const { get } = useContent();
+
+  const testimonials = safeJSON(get('home_testimonials', []), []);
+  const galleryImages = safeJSON(get('home_gallery_images', []), []);
 
   useEffect(() => {
     api.get('/products?limit=4&sort=newest&featured=true').then((res) => setFeatured(res.data.products || []));
@@ -135,34 +128,27 @@ export default function Home() {
             <div>
               <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
                 <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
-                  <Sparkles size={14} /> {heroBanner?.title || 'New Collection 2026'}
+                  <Sparkles size={14} /> {get('home_hero_badge', 'New Collection 2026')}
                 </span>
               </motion.div>
               <motion.h1
                 initial="hidden" animate="visible" variants={fadeUp} custom={1}
                 className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight"
               >
-                {heroBanner?.subtitle ? (
-                  heroBanner.subtitle
-                ) : (
-                  <>
-                    Wear Your <br />
-                    <span className="text-white/90">Beautiful Sparkle</span>
-                  </>
-                )}
+                {get('home_hero_heading', 'Wear Your Beautiful Sparkle')}
               </motion.h1>
               <motion.p
                 initial="hidden" animate="visible" variants={fadeUp} custom={2}
                 className="text-white/80 text-lg md:text-xl mb-10 max-w-lg leading-relaxed"
               >
-                {heroBanner?.link && heroBanner?.cta ? 'Curated fashion for the confident, sparkling woman. Discover pieces that celebrate your unique beauty.' : 'Curated fashion for the confident, sparkling woman. Discover pieces that celebrate your unique beauty and make you feel extraordinary.'}
+                {get('home_hero_subheading', 'Curated fashion for the confident, sparkling woman. Discover pieces that celebrate your unique beauty and make you feel extraordinary.')}
               </motion.p>
               <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3} className="flex flex-wrap gap-4">
                 <Link
-                  to={heroBanner?.link || '/shop'}
+                  to={get('home_hero_cta_link', '/shop')}
                   className="bg-white text-text px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-button hover:shadow-lg inline-flex items-center gap-2 text-lg"
                 >
-                  {heroBanner?.cta || 'Shop New Arrivals'} <ArrowRight size={18} />
+                  {get('home_hero_cta', 'Shop New Arrivals')} <ArrowRight size={18} />
                 </Link>
                 <Link to="/about" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all inline-flex items-center gap-2 text-lg">
                   Our Story
@@ -177,7 +163,7 @@ export default function Home() {
             >
               <div className="relative">
                 <div className="aspect-[3/4] rounded-2xl border-4 border-white/30 overflow-hidden shadow-modal">
-                  <img src={heroBanner?.image || '/images/hero-1.jpeg'} alt="Curated women's fashion collection" className="w-full h-full object-cover" />
+                  <img src={get('home_hero_image', '/images/hero-1.jpeg')} alt="Curated women's fashion collection" className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -bottom-6 -left-6 bg-white rounded-xl p-4 shadow-modal flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -185,7 +171,7 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="font-semibold text-sm">Free Shipping</p>
-                    <p className="text-text-light text-xs">On orders over KSh 5,000</p>
+                    <p className="text-text-light text-xs">On orders over KSh {get('free_shipping_threshold', '5,000')}</p>
                   </div>
                 </div>
               </div>
@@ -201,7 +187,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: <Truck size={24} />, title: 'Free Shipping', desc: 'Orders over KSh 5,000' },
+              { icon: <Truck size={24} />, title: 'Free Shipping', desc: `Orders over KSh ${get('free_shipping_threshold', '5,000')}` },
               { icon: <CreditCard size={24} />, title: 'M-Pesa Checkout', desc: 'Fast & secure payment' },
               { icon: <RotateCcw size={24} />, title: 'Easy Returns', desc: '7-day return policy' },
               { icon: <Headphones size={24} />, title: '24/7 Support', desc: 'WhatsApp us anytime' },
@@ -271,13 +257,13 @@ export default function Home() {
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
               <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">{storyBanner?.title || 'Our Story'}</span>
               <h2 id="story-heading" className="font-heading text-3xl md:text-5xl font-bold mt-2 mb-6 leading-tight">
-                {storyBanner?.subtitle || 'Fashion That Celebrates'} <span className="text-gradient">{storyBanner?.subtitle ? '' : 'You'}</span>
+                {get('home_story_heading', 'Fashion That Celebrates You')}
               </h2>
               <p className="text-text-light text-lg leading-relaxed mb-6">
-                Sparkpretty Closet was born from a simple belief: every woman deserves to feel beautiful and confident in what she wears. We curate fashion that blends African vibrancy with global trends, creating pieces that tell your story.
+                {get('home_story_para1', 'Sparkpretty Closet was born from a simple belief: every woman deserves to feel beautiful and confident in what she wears. We curate fashion that blends African vibrancy with global trends, creating pieces that tell your story.')}
               </p>
               <p className="text-text-light text-lg leading-relaxed mb-8">
-                From the bustling streets of Nairobi to the serene beaches of Mombasa, our collections are designed for the modern Kenyan woman who embraces her unique sparkle.
+                {get('home_story_para2', 'From the bustling streets of Nairobi to the serene beaches of Mombasa, our collections are designed for the modern Kenyan woman who embraces her unique sparkle.')}
               </p>
               <div className="grid grid-cols-3 gap-6">
                 {[
@@ -308,7 +294,7 @@ export default function Home() {
               className="relative"
             >
               <div className="aspect-[4/5] rounded-2xl overflow-hidden">
-                <img src={storyBanner?.image || '/images/hero-3.jpeg'} alt="Our fashion story" className="w-full h-full object-cover" />
+                <img src={get('home_story_image', '/images/hero-3.jpeg')} alt="Our fashion story" className="w-full h-full object-cover" />
               </div>
               <div className="absolute -top-4 -right-4 bg-white rounded-xl p-5 shadow-modal max-w-xs">
                 <div className="flex items-center gap-3 mb-2">
@@ -317,7 +303,7 @@ export default function Home() {
                   </div>
                   <span className="text-sm font-semibold">4.9/5</span>
                 </div>
-                <p className="text-sm text-text-light">Trusted by <strong>2,000+</strong> happy customers across Kenya</p>
+                <p className="text-sm text-text-light">Trusted by <strong>{get('home_story_stat_customers', '2,000+')}</strong> happy customers across Kenya</p>
               </div>
             </motion.div>
           </div>
@@ -448,7 +434,7 @@ export default function Home() {
                   transition={{ delay: 0.1 }}
                   className="font-heading text-4xl md:text-6xl font-bold text-white mb-4"
                 >
-                  {promoBanner?.subtitle || 'Up to 30% Off'}
+                  {promoBanner?.subtitle || get('home_promo_heading', 'Up to 30% Off')}
                 </motion.h2>
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
@@ -457,7 +443,7 @@ export default function Home() {
                   transition={{ delay: 0.2 }}
                   className="text-white/80 text-lg md:text-xl mb-8 max-w-lg mx-auto"
                 >
-                  {promoBanner?.cta ? `Shop the collection today — ${promoBanner.cta}.` : "Spring into savings! Shop our curated sale collection before it's gone."}
+                  {get('home_promo_text', "Spring into savings! Shop our curated sale collection before it's gone.")}
                 </motion.p>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -467,7 +453,7 @@ export default function Home() {
                   className="flex flex-wrap gap-4 justify-center"
                 >
                   <Link to={promoBanner?.link || '/shop'} className="bg-white text-text px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-button inline-flex items-center gap-2 text-lg">
-                    {promoBanner?.cta || 'Shop the Sale'} <ArrowRight size={18} />
+                    {promoBanner?.cta || get('home_promo_cta', 'Shop the Sale')} <ArrowRight size={18} />
                   </Link>
                   <div className="flex items-center gap-2 text-white/70 text-sm">
                     <Clock size={16} /> Ends Sunday midnight
@@ -630,23 +616,23 @@ export default function Home() {
               >
                 <Quote size={40} className="text-primary/10 mx-auto mb-6" />
                 <p className="text-lg md:text-xl text-text leading-relaxed mb-8 max-w-2xl mx-auto">
-                  "{testimonials[activeTestimonial].text}"
+                  "{testimonials[activeTestimonial]?.text}"
                 </p>
                 <div className="flex items-center justify-center gap-1 mb-4">
-                  {[...Array(testimonials[activeTestimonial].rating)].map((_, j) => (
+                  {[...Array(testimonials[activeTestimonial]?.rating || 5)].map((_, j) => (
                     <Star key={j} size={18} className="text-yellow-400 fill-yellow-400" />
                   ))}
                 </div>
                 <div className="flex items-center justify-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary-dark font-bold text-lg">
-                    {testimonials[activeTestimonial].avatar}
+                    {testimonials[activeTestimonial]?.avatar}
                   </div>
                   <div className="text-left">
-                    <p className="font-semibold">{testimonials[activeTestimonial].name}</p>
-                    <p className="text-text-light text-sm">{testimonials[activeTestimonial].location}</p>
+                    <p className="font-semibold">{testimonials[activeTestimonial]?.name}</p>
+                    <p className="text-text-light text-sm">{testimonials[activeTestimonial]?.location}</p>
                   </div>
                 </div>
-                <p className="text-xs text-text-muted mt-3">Purchased: {testimonials[activeTestimonial].product}</p>
+                <p className="text-xs text-text-muted mt-3">Purchased: {testimonials[activeTestimonial]?.product}</p>
               </motion.div>
             </AnimatePresence>
             <div className="flex justify-center gap-3 mt-6">
@@ -772,10 +758,10 @@ export default function Home() {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
             <Send size={36} className="text-white/60 mx-auto mb-6" />
             <h2 id="newsletter-heading" className="font-heading text-3xl md:text-5xl font-bold text-white mb-4">
-              Stay in the Spark
+              {get('home_newsletter_heading', 'Stay in the Spark')}
             </h2>
             <p className="text-white/80 text-lg mb-10 max-w-xl mx-auto">
-              Get exclusive access to new arrivals, special discounts, and styling tips delivered straight to your inbox.
+              {get('home_newsletter_text', 'Get exclusive access to new arrivals, special discounts, and styling tips delivered straight to your inbox.')}
             </p>
             <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
               <label htmlFor="home-newsletter-email" className="sr-only">Email address</label>
@@ -792,7 +778,7 @@ export default function Home() {
                 Subscribe <ArrowRight size={18} />
               </button>
             </form>
-            <p className="text-white/50 text-sm mt-4">No spam. Unsubscribe anytime. Join 2,000+ fashion lovers.</p>
+            <p className="text-white/50 text-sm mt-4">No spam. Unsubscribe anytime. Join {get('home_newsletter_subscribers', '2,000+')} fashion lovers.</p>
           </motion.div>
         </div>
       </section>
@@ -840,9 +826,9 @@ export default function Home() {
           ============================================ */}
       <section className="section-padding bg-secondary text-white text-center" aria-label="Call to action">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-          <h2 className="font-heading text-4xl md:text-5xl font-bold mb-4">Ready to Sparkle?</h2>
+          <h2 className="font-heading text-4xl md:text-5xl font-bold mb-4">{get('home_cta_heading', 'Ready to Sparkle?')}</h2>
           <p className="text-white/70 mb-10 max-w-lg mx-auto text-lg">
-            Join thousands of women who trust Sparkpretty Closet for their wardrobe essentials. Your next favorite outfit is waiting.
+            {get('home_cta_text', 'Join thousands of women who trust Sparkpretty Closet for their wardrobe essentials. Your next favorite outfit is waiting.')}
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link to="/shop" className="btn-primary text-lg px-10 py-4 inline-flex items-center gap-2">

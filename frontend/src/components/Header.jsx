@@ -8,6 +8,7 @@ import {
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme, THEMES } from '../context/ThemeContext';
+import { useContent } from '../context/ContentContext';
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -17,6 +18,7 @@ export default function Header() {
   const { user } = useAuth();
   const { theme, cycleTheme } = useTheme();
   const location = useLocation();
+  const { get } = useContent();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -25,6 +27,17 @@ export default function Header() {
   }, []);
 
   useEffect(() => { setMobileOpen(false); }, [location]);
+
+  const phone = get('contact_phone', '0729366991');
+  const phoneIntl = get('contact_phone_intl', '254729366991');
+  const email = get('contact_email', 'hello@sparkpretty.co.ke');
+  const hours = get('contact_business_hours', 'Mon-Sat 8AM-8PM');
+  const freeShipping = get('free_shipping_threshold', '5,000');
+  const instagram = get('social_instagram', 'https://instagram.com/sparkpretty');
+  const facebook = get('social_facebook', 'https://facebook.com/sparkpretty');
+  const twitter = get('social_twitter', 'https://twitter.com/sparkpretty');
+  const siteName = get('site_name', 'Sparkpretty Closet');
+  const [brandFirst, brandSecond] = siteName.split(/\s+(.+)/);
 
   const navLinks = [
     { to: '/', label: 'Home' },
@@ -35,9 +48,9 @@ export default function Header() {
   ];
 
   const socials = [
-    { name: 'Instagram', icon: <Instagram size={13} />, url: 'https://instagram.com/sparkpretty', hover: 'hover:bg-[#E4405F]' },
-    { name: 'Facebook', icon: <Facebook size={13} />, url: 'https://facebook.com/sparkpretty', hover: 'hover:bg-[#1877F2]' },
-    { name: 'Twitter', icon: <Twitter size={13} />, url: 'https://twitter.com/sparkpretty', hover: 'hover:bg-[#1DA1F2]' },
+    { name: 'Instagram', icon: <Instagram size={13} />, url: instagram, hover: 'hover:bg-[#E4405F]' },
+    { name: 'Facebook', icon: <Facebook size={13} />, url: facebook, hover: 'hover:bg-[#1877F2]' },
+    { name: 'Twitter', icon: <Twitter size={13} />, url: twitter, hover: 'hover:bg-[#1DA1F2]' },
   ];
 
   return (
@@ -45,25 +58,22 @@ export default function Header() {
       {/* ===== Top Utility Bar ===== */}
       <div className="header-top text-white text-xs" role="banner">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 py-2">
-          {/* Promo message */}
           <p className="flex items-center gap-1.5 font-medium text-white/90 whitespace-nowrap">
             <Truck size={13} aria-hidden="true" />
-            <span className="hidden sm:inline">Free delivery on orders over KSh 5,000</span>
-            <span className="sm:hidden">Free delivery over KSh 5,000</span>
+            <span className="hidden sm:inline">Free delivery on orders over KSh {freeShipping}</span>
+            <span className="sm:hidden">Free delivery over KSh {freeShipping}</span>
           </p>
 
-          {/* Contact + hours (desktop) */}
           <div className="hidden md:flex items-center gap-5 text-white/85">
-            <p className="flex items-center gap-1.5"><Clock size={13} aria-hidden="true" /> Mon-Sat 8AM-8PM</p>
-            <a href="tel:0729366991" className="flex items-center gap-1.5 hover:text-white transition-colors" aria-label="Call us at 0729366991">
-              <Phone size={13} aria-hidden="true" /> 0729366991
+            <p className="flex items-center gap-1.5"><Clock size={13} aria-hidden="true" /> {hours}</p>
+            <a href={`tel:${phone}`} className="flex items-center gap-1.5 hover:text-white transition-colors" aria-label={`Call us at ${phone}`}>
+              <Phone size={13} aria-hidden="true" /> {phone}
             </a>
-            <a href="mailto:hello@sparkpretty.co.ke" className="flex items-center gap-1.5 hover:text-white transition-colors" aria-label="Email hello@sparkpretty.co.ke">
-              <Mail size={13} aria-hidden="true" /> <span className="hidden lg:inline">hello@sparkpretty.co.ke</span><span className="lg:hidden">Email</span>
+            <a href={`mailto:${email}`} className="flex items-center gap-1.5 hover:text-white transition-colors" aria-label={`Email ${email}`}>
+              <Mail size={13} aria-hidden="true" /> <span className="hidden lg:inline">{email}</span><span className="lg:hidden">Email</span>
             </a>
           </div>
 
-          {/* Socials */}
           <div className="flex items-center gap-1.5">
             {socials.map((s) => (
               <a
@@ -100,9 +110,9 @@ export default function Header() {
               {mobileOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
             </button>
 
-            <Link to="/" className="flex items-center" aria-label="Sparkpretty Closet - Home">
+            <Link to="/" className="flex items-center" aria-label={`${siteName} - Home`}>
               <h1 className="font-heading text-xl md:text-2xl font-bold text-text">
-                Sparkpretty<span className="text-secondary"> Closet</span>
+                {brandFirst}<span className="text-secondary"> {brandSecond}</span>
               </h1>
             </Link>
 
@@ -152,6 +162,16 @@ export default function Header() {
                   className="p-2 text-text hover:text-primary-dark transition-colors"
                   aria-label="Admin dashboard"
                   title="Admin dashboard"
+                >
+                  <Shield size={20} aria-hidden="true" />
+                </Link>
+              )}
+              {user?.role === 'editor' && (
+                <Link
+                  to="/admin/content"
+                  className="p-2 text-text hover:text-primary-dark transition-colors"
+                  aria-label="Content Manager"
+                  title="Content Manager"
                 >
                   <Shield size={20} aria-hidden="true" />
                 </Link>
@@ -268,14 +288,14 @@ export default function Header() {
                 ))}
               </div>
               <div className="mt-8 pt-6 border-t border-border space-y-3 text-sm">
-                <a href="tel:0729366991" className="flex items-center gap-3 text-secondary font-semibold" aria-label="Call us at 0729366991">
-                  <Phone size={18} aria-hidden="true" /> 0729366991
+                <a href={`tel:${phone}`} className="flex items-center gap-3 text-secondary font-semibold" aria-label={`Call us at ${phone}`}>
+                  <Phone size={18} aria-hidden="true" /> {phone}
                 </a>
-                <a href="mailto:hello@sparkpretty.co.ke" className="flex items-center gap-3 text-text-light hover:text-secondary transition-colors break-all" aria-label="Email hello@sparkpretty.co.ke">
-                  <Mail size={18} aria-hidden="true" /> hello@sparkpretty.co.ke
+                <a href={`mailto:${email}`} className="flex items-center gap-3 text-text-light hover:text-secondary transition-colors break-all" aria-label={`Email ${email}`}>
+                  <Mail size={18} aria-hidden="true" /> {email}
                 </a>
                 <p className="flex items-center gap-3 text-text-light">
-                  <Clock size={18} aria-hidden="true" /> Mon-Sat 8AM-8PM
+                  <Clock size={18} aria-hidden="true" /> {hours}
                 </p>
               </div>
             </motion.nav>
