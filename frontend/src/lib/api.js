@@ -1,4 +1,5 @@
-const API = import.meta.env.VITE_API_URL || '/api';
+export const API = import.meta.env.VITE_API_URL || '/api';
+export const API_BASE = API.replace(/\/api\/?$/, '');
 
 const request = async (path, options = {}) => {
   const token = localStorage.getItem('token');

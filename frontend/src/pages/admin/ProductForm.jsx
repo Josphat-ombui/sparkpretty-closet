@@ -1,9 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ImagePlus } from 'lucide-react';
-import { api } from '../../lib/api';
+import { ArrowLeft, Plus, Trash2, ImagePlus, UploadCloud, Loader2 } from 'lucide-react';
+import { api, API, API_BASE } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/admin/ui.jsx';
+
+const uploadFiles = async (files) => {
+  const token = localStorage.getItem('token');
+  const fd = new FormData();
+  files.forEach((f) => fd.append('images', f));
+  const res = await fetch(`${API}/uploads`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: fd,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Upload failed');
+  return data.data || [];
+};
 
 const emptyVariant = { size: '', color: '', colorHex: '#000000', price: '', salePrice: '', sku: '', stock: '', images: [] };
 
@@ -17,6 +31,7 @@ export default function ProductForm() {
     name: '', description: '', category: '', tags: '', featured: false, active: true,
     variants: [{ ...emptyVariant }],
   });
+  const [uploading, setUploading] = useState(new Set());
 
   useEffect(() => {
     api.get('/products/categories').then((r) => setCategories(r.data || [])).catch(() => {});
@@ -56,6 +71,36 @@ export default function ProductForm() {
     const variants = [...form.variants];
     variants[i].images = variants[i].images.filter((_, j) => j !== idx);
     setForm({ ...form, variants });
+  };
+
+  const replaceVariantImages = (i, updater) => {
+    setForm((prev) => {
+      const variants = [...prev.variants];
+      variants[i] = { ...variants[i], images: updater(variants[i].images || []) };
+      return { ...prev, variants };
+    });
+  };
+
+  const handleUpload = async (i, files) => {
+    const list = Array.from(files || []);
+    if (!list.length) return;
+    const previews = list.map((f) => ({ preview: URL.createObjectURL(f), file: f }));
+    replaceVariantImages(i, (imgs) => [...imgs, ...previews.map((p) => p.preview)]);
+    setUploading((s) => { const n = new Set(s); previews.forEach((p) => n.add(p.preview)); return n; });
+
+    for (const p of previews) {
+      try {
+        const urls = await uploadFiles([p.file]);
+        const serverUrl = `${API_BASE}${urls[0]}`;
+        replaceVariantImages(i, (imgs) => imgs.map((img) => (img === p.preview ? serverUrl : img)));
+      } catch (err) {
+        replaceVariantImages(i, (imgs) => imgs.filter((img) => img !== p.preview));
+        toast.error(`Upload failed: ${err.message}`);
+      } finally {
+        setUploading((s) => { const n = new Set(s); n.delete(p.preview); return n; });
+        URL.revokeObjectURL(p.preview);
+      }
+    }
   };
 
   const addVariant = () => setForm({ ...form, variants: [...form.variants, { ...emptyVariant }] });
@@ -182,8 +227,13 @@ export default function ProductForm() {
                   <label className="flex items-center gap-1.5 text-xs font-medium mb-2"><ImagePlus size={14} /> Images</label>
                   <div className="flex flex-wrap gap-2">
                     {(v.images || []).map((img, idx) => (
-                      <div key={idx} className="relative group">
+                      <div key={idx} className={`relative group cursor-pointer ${uploading.has(img) ? 'opacity-90' : ''}`}>
                         <img src={img} alt="" className="w-16 h-20 object-cover rounded-lg border border-border" />
+                        {uploading.has(img) && (
+                          <div className="absolute inset-0 rounded-lg bg-black/40 flex items-center justify-center">
+                            <Loader2 size={16} className="text-white animate-spin" />
+                          </div>
+                        )}
                         <button type="button" onClick={() => removeImage(i, idx)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-error text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" title="Remove image">
                           <XSmall />
                         </button>
@@ -191,26 +241,39 @@ export default function ProductForm() {
                     ))}
                     {!v.images?.length && <span className="text-xs text-text-muted self-center">No images yet</span>}
                   </div>
-                  <div className="flex gap-2 mt-2">
-                    <input
-                      className="input-field text-sm flex-1"
-                      placeholder="Paste image URL and press Add..."
-                      value={v._imgInput || ''}
-                      onChange={(e) => updateVariant(i, '_imgInput', e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const url = v._imgInput?.trim();
-                        if (!url) return toast.error('Enter an image URL');
-                        addImage(i, url);
-                        updateVariant(i, '_imgInput', '');
-                      }}
-                      className="btn-outline text-sm px-4"
-                    >
-                      Add
-                    </button>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <label className="btn-primary text-sm px-4 py-2 cursor-pointer inline-flex items-center gap-2">
+                      <UploadCloud size={15} /> Upload photos
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => { handleUpload(i, e.target.files); e.target.value = ''; }}
+                      />
+                    </label>
+                    <div className="flex gap-2 flex-1 min-w-[220px]">
+                      <input
+                        className="input-field text-sm flex-1"
+                        placeholder="Paste image URL and press Add..."
+                        value={v._imgInput || ''}
+                        onChange={(e) => updateVariant(i, '_imgInput', e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = v._imgInput?.trim();
+                          if (!url) return toast.error('Enter an image URL');
+                          addImage(i, url);
+                          updateVariant(i, '_imgInput', '');
+                        }}
+                        className="btn-outline text-sm px-4"
+                      >
+                        Add
+                      </button>
+                    </div>
                   </div>
+                  <p className="text-xs text-text-muted">Select one or more photos — they preview instantly and upload while you keep editing. Max 5 MB each.</p>
                 </div>
               </div>
             ))}
