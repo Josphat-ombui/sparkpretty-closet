@@ -34,6 +34,10 @@ const AdminContacts = lazy(() => import('./pages/admin/Contacts'));
 const AdminBanners = lazy(() => import('./pages/admin/Banners'));
 const AdminSettings = lazy(() => import('./pages/admin/Settings'));
 const AdminContentManager = lazy(() => import('./pages/admin/ContentManager'));
+const AdminDocuments = lazy(() => import('./pages/admin/Documents'));
+const DocumentForm = lazy(() => import('./pages/admin/DocumentForm'));
+const DocumentView = lazy(() => import('./pages/admin/DocumentView'));
+const DocumentPrint = lazy(() => import('./pages/admin/DocumentPrint'));
 
 const adminShell = (element) => (
   <ProtectedRoute adminOnly>
@@ -95,6 +99,18 @@ export default function App() {
           <Route path="/admin/banners" element={adminShell(withSuspense(<AdminBanners />))} />
           <Route path="/admin/content" element={editorShell(withSuspense(<AdminContentManager />))} />
           <Route path="/admin/settings" element={adminShell(withSuspense(<AdminSettings />))} />
+          <Route path="/admin/documents" element={adminShell(withSuspense(<AdminDocuments />))} />
+          <Route path="/admin/documents/new" element={adminShell(withSuspense(<DocumentForm />))} />
+          <Route path="/admin/documents/:id/edit" element={adminShell(withSuspense(<DocumentForm />))} />
+          <Route path="/admin/documents/:id" element={adminShell(withSuspense(<DocumentView />))} />
+          <Route
+            path="/admin/documents/:id/print"
+            element={
+              <ProtectedRoute adminOnly>
+                {withSuspense(<DocumentPrint />)}
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
       <Footer />

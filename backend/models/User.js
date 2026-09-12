@@ -18,11 +18,15 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, trim: true },
   role: { type: String, enum: ['customer', 'editor', 'admin'], default: 'customer' },
   addresses: [addressSchema],
+  tokenVersion: { type: Number, default: 0 },
+  refreshTokens: [{ type: String, select: false }],
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
+  this.tokenVersion = (this.tokenVersion || 0) + 1;
+  this.refreshTokens = [];
   next();
 });
 

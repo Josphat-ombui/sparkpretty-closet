@@ -98,17 +98,17 @@ export default function Home() {
   return (
     <div>
       <SEO
-        title="Women's Fashion Kenya"
-        description="Kenya's premier women's fashion destination. Shop curated dresses, tops, shoes & accessories. M-Pesa checkout. Free shipping over KSh 5,000."
+        title={get('seo_home_title', "Women's Fashion Kenya")}
+        description={get('seo_home_description', "Kenya's premier women's fashion destination. Shop curated dresses, tops, shoes & accessories. M-Pesa checkout. Free shipping over KSh 5,000.")}
         url="/"
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'WebSite',
-          name: 'Sparkpretty Closet',
-          url: 'https://sparkpretty.co.ke',
+          name: get('site_name', 'Sparkpretty Closet'),
+          url: get('site_url', 'https://sparkpretty.co.ke'),
           potentialAction: {
             '@type': 'SearchAction',
-            target: 'https://sparkpretty.co.ke/shop?search={search_term_string}',
+            target: `${get('site_url', 'https://sparkpretty.co.ke')}/shop?search={search_term_string}`,
             'query-input': 'required name=search_term_string',
           },
         }}
@@ -127,13 +127,13 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
-                <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
-                  <Sparkles size={14} /> {get('home_hero_badge', 'New Collection 2026')}
+                <span className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-[0.16em] mb-6 border border-white/20">
+                  <Sparkles size={13} /> {get('home_hero_badge', 'New Collection 2026')}
                 </span>
               </motion.div>
               <motion.h1
                 initial="hidden" animate="visible" variants={fadeUp} custom={1}
-                className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight"
+                className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-[1.08]"
               >
                 {get('home_hero_heading', 'Wear Your Beautiful Sparkle')}
               </motion.h1>
@@ -146,11 +146,11 @@ export default function Home() {
               <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3} className="flex flex-wrap gap-4">
                 <Link
                   to={get('home_hero_cta_link', '/shop')}
-                  className="bg-white text-text px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-button hover:shadow-lg inline-flex items-center gap-2 text-lg"
+                  className="btn-white px-8 py-4 text-lg"
                 >
                   {get('home_hero_cta', 'Shop New Arrivals')} <ArrowRight size={18} />
                 </Link>
-                <Link to="/about" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all inline-flex items-center gap-2 text-lg">
+                <Link to="/about" className="border border-white/40 text-white px-8 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all inline-flex items-center gap-2 text-lg">
                   Our Story
                 </Link>
               </motion.div>
@@ -215,7 +215,7 @@ export default function Home() {
       <section className="section-padding" aria-labelledby="categories-heading">
         <div className="max-w-7xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-14">
-            <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">Browse</span>
+            <span className="eyebrow">Browse</span>
             <h2 id="categories-heading" className="font-heading text-3xl md:text-5xl font-bold mt-2 mb-4">Shop by Category</h2>
             <p className="text-text-light text-lg max-w-xl mx-auto">Find exactly what you're looking for — from stunning dresses to statement accessories.</p>
           </motion.div>
@@ -255,7 +255,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-              <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">{storyBanner?.title || 'Our Story'}</span>
+              <span className="eyebrow">{storyBanner?.title || 'Our Story'}</span>
               <h2 id="story-heading" className="font-heading text-3xl md:text-5xl font-bold mt-2 mb-6 leading-tight">
                 {get('home_story_heading', 'Fashion That Celebrates You')}
               </h2>
@@ -318,7 +318,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="flex items-end justify-between mb-12">
               <div>
-                <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">Most Loved</span>
+                <span className="eyebrow">Most Loved</span>
                 <h2 id="bestsellers-heading" className="font-heading text-3xl md:text-5xl font-bold mt-2 mb-3">Best Sellers</h2>
                 <p className="text-text-light text-lg">Our customers' absolute favorites</p>
               </div>
@@ -452,9 +452,9 @@ export default function Home() {
                   transition={{ delay: 0.3 }}
                   className="flex flex-wrap gap-4 justify-center"
                 >
-                  <Link to={promoBanner?.link || '/shop'} className="bg-white text-text px-8 py-4 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-button inline-flex items-center gap-2 text-lg">
-                    {promoBanner?.cta || get('home_promo_cta', 'Shop the Sale')} <ArrowRight size={18} />
-                  </Link>
+                  <Link to={promoBanner?.link || '/shop'} className="btn-white px-8 py-4 text-lg">
+                  {promoBanner?.cta || get('home_promo_cta', 'Shop the Sale')} <ArrowRight size={18} />
+                </Link>
                   <div className="flex items-center gap-2 text-white/70 text-sm">
                     <Clock size={16} /> Ends Sunday midnight
                   </div>
@@ -472,7 +472,7 @@ export default function Home() {
         <section className="section-padding" aria-labelledby="newarrivals-heading">
           <div className="max-w-7xl mx-auto">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-12">
-              <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">Just In</span>
+              <span className="eyebrow">Just In</span>
               <h2 id="newarrivals-heading" className="font-heading text-3xl md:text-5xl font-bold mt-2 mb-4">New Arrivals</h2>
               <p className="text-text-light text-lg max-w-xl mx-auto">Fresh styles that just landed. Be the first to rock the latest trends.</p>
             </motion.div>
@@ -558,7 +558,7 @@ export default function Home() {
       <section className="bg-white section-padding" aria-labelledby="gallery-heading">
         <div className="max-w-7xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-12">
-            <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">Get Inspired</span>
+            <span className="eyebrow">Get Inspired</span>
             <h2 id="gallery-heading" className="font-heading text-3xl md:text-5xl font-bold mt-2 mb-4">Style Gallery</h2>
             <p className="text-text-light text-lg">See how our pieces come to life in real moments</p>
           </motion.div>
@@ -599,7 +599,7 @@ export default function Home() {
       <section className="section-padding" aria-labelledby="testimonials-heading">
         <div className="max-w-7xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-14">
-            <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">What They Say</span>
+            <span className="eyebrow">What They Say</span>
             <h2 id="testimonials-heading" className="font-heading text-3xl md:text-5xl font-bold mt-2 mb-4">Customer Love</h2>
             <p className="text-text-light text-lg">Real stories from our amazing customers across Kenya</p>
           </motion.div>
@@ -701,7 +701,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="flex items-end justify-between mb-12">
               <div>
-                <span className="text-primary-dark text-sm font-semibold uppercase tracking-wider">Style Guide</span>
+                <span className="eyebrow">Style Guide</span>
                 <h2 id="blog-heading" className="font-heading text-3xl md:text-5xl font-bold mt-2 mb-3">From Our Journal</h2>
                 <p className="text-text-light text-lg">Fashion tips, trends, and inspiration</p>
               </div>
@@ -824,17 +824,17 @@ export default function Home() {
       {/* ============================================
           13. FINAL CTA
           ============================================ */}
-      <section className="section-padding bg-secondary text-white text-center" aria-label="Call to action">
+      <section className="section-padding text-white text-center" style={{ backgroundColor: 'var(--footer)' }} aria-label="Call to action">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
           <h2 className="font-heading text-4xl md:text-5xl font-bold mb-4">{get('home_cta_heading', 'Ready to Sparkle?')}</h2>
           <p className="text-white/70 mb-10 max-w-lg mx-auto text-lg">
             {get('home_cta_text', 'Join thousands of women who trust Sparkpretty Closet for their wardrobe essentials. Your next favorite outfit is waiting.')}
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <Link to="/shop" className="btn-primary text-lg px-10 py-4 inline-flex items-center gap-2">
+            <Link to="/shop" className="btn-white px-10 py-4 text-lg">
               Shop Now <ArrowRight size={18} />
             </Link>
-            <Link to="/contact" className="border-2 border-white text-white px-10 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all text-lg inline-flex items-center gap-2">
+            <Link to="/contact" className="border border-white/40 text-white px-10 py-4 rounded-lg font-semibold hover:bg-white/10 transition-all text-lg inline-flex items-center gap-2">
               Talk to Us
             </Link>
           </div>

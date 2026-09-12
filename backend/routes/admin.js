@@ -9,6 +9,7 @@ import ContactMessage from '../models/ContactMessage.js';
 import Setting from '../models/Setting.js';
 import Banner from '../models/Banner.js';
 import ContentVersion from '../models/ContentVersion.js';
+import Document from '../models/Document.js';
 import { auth, adminOnly, editorOrAdmin } from '../middleware/auth.js';
 import { parsePagination } from '../utils/pagination.js';
 
@@ -610,6 +611,155 @@ router.put('/settings/:key', asyncHandler(async (req, res) => {
 
 router.delete('/settings/:key', asyncHandler(async (req, res) => {
   await Setting.findOneAndDelete({ key: req.params.key });
+  res.json({ success: true, data: {} });
+}));
+
+// ============================================================
+// Business Documents (quotation, invoice, receipt, letterhead...)
+// ============================================================
+const DOC_PREFIX = {
+  quotation: 'QUO',
+  invoice: 'INV',
+  receipt: 'RCT',
+  credit_note: 'CRN',
+  delivery_note: 'DNN',
+  purchase_order: 'PO',
+  letterhead: 'LTR',
+  statement: 'STM',
+};
+
+const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
+const computeTotals = (payload) => {
+  const rawItems = Array.isArray(payload.items) ? payload.items : [];
+  const items = rawItems.map((it) => ({
+    description: (it.description || '').trim(),
+    quantity: Math.max(0, Number(it.quantity) || 0),
+    unitPrice: Math.max(0, Number(it.unitPrice) || 0),
+    amount: round2((Math.max(0, Number(it.quantity) || 0)) * (Math.max(0, Number(it.unitPrice) || 0))),
+  })).filter((it) => it.description);
+  const subtotal = items.reduce((sum, it) => sum + it.amount, 0);
+  const discount = Math.max(0, Number(payload.discount) || 0);
+  const taxRate = Math.min(100, Math.max(0, Number(payload.taxRate) || 0));
+  const taxable = Math.max(0, subtotal - discount);
+  const taxAmount = round2(taxable * (taxRate / 100));
+  const shipping = Math.max(0, Number(payload.shipping) || 0);
+  const total = round2(taxable + taxAmount + shipping);
+  const amountPaid = Math.max(0, Number(payload.amountPaid) || 0);
+  const balance = round2(Math.max(0, total - amountPaid));
+  return { items, subtotal: round2(subtotal), discount: round2(Math.min(discount, subtotal)), taxRate, taxAmount, shipping, total, amountPaid, balance };
+};
+
+router.get('/documents/next-number', asyncHandler(async (req, res) => {
+  const type = req.query.type || 'invoice';
+  const prefix = DOC_PREFIX[type] || 'DOC';
+  const year = new Date().getFullYear();
+  const matches = await Document.countDocuments({
+    type,
+    number: new RegExp(`^${prefix}-${year}-`),
+  });
+  const number = `${prefix}-${year}-${String(matches + 1).padStart(4, '0')}`;
+  res.json({ success: true, data: number });
+}));
+
+router.get('/documents', asyncHandler(async (req, res) => {
+  const { page, limit, skip } = parsePagination(req.query);
+  const type = (req.query.type || '').toString().trim();
+  const status = (req.query.status || '').toString().trim();
+  const search = (req.query.search || '').toString().trim();
+  const filter = {};
+  if (type) filter.type = type;
+  if (status) filter.status = status;
+  if (search) {
+    filter.$or = [
+      { number: new RegExp(search, 'i') },
+      { title: new RegExp(search, 'i') },
+      { 'party.name': new RegExp(search, 'i') },
+    ];
+  }
+
+  const [items, total] = await Promise.all([
+    Document.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Document.countDocuments(filter),
+  ]);
+  res.json({ success: true, data: { items, total, page, pages: Math.ceil(total / limit) || 1, limit } });
+}));
+
+router.get('/documents/summary', asyncHandler(async (req, res) => {
+  const year = new Date().getFullYear();
+  const start = new Date(`${year}-01-01T00:00:00.000Z`);
+  const [totalDocs, byType, invoiced, collected] = await Promise.all([
+    Document.countDocuments(),
+    Document.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
+    Document.aggregate([
+      { $match: { type: 'invoice', status: { $in: ['sent', 'approved', 'paid'] }, createdAt: { $gte: start } } },
+      { $group: { _id: null, total: { $sum: '$total' } } },
+    ]),
+    Document.aggregate([
+      { $match: { type: 'receipt', status: { $ne: 'void' }, createdAt: { $gte: start } } },
+      { $group: { _id: null, total: { $sum: '$total' } } },
+    ]),
+  ]);
+  res.json({
+    success: true,
+    data: {
+      totalDocs,
+      byType,
+      yearInvoiced: invoiced[0]?.total || 0,
+      yearCollected: collected[0]?.total || 0,
+    },
+  });
+}));
+
+router.get('/documents/:id', asyncHandler(async (req, res) => {
+  const document = await Document.findById(req.params.id);
+  if (!document) return res.status(404).json({ success: false, message: 'Document not found' });
+  res.json({ success: true, data: document });
+}));
+
+router.post('/documents', asyncHandler(async (req, res) => {
+  const body = req.body || {};
+  if (!body.type || !DOC_PREFIX[body.type]) {
+    return res.status(400).json({ success: false, message: 'A valid document type is required' });
+  }
+  const totals = computeTotals(body);
+  let number = (body.number || '').toString().trim();
+  if (!number) {
+    const prefix = DOC_PREFIX[body.type];
+    const year = new Date().getFullYear();
+    const matches = await Document.countDocuments({ type: body.type, number: new RegExp(`^${prefix}-${year}-`) });
+    number = `${prefix}-${year}-${String(matches + 1).padStart(4, '0')}`;
+  }
+  const document = await Document.create({
+    ...body,
+    number,
+    ...totals,
+    sender: body.sender || {},
+    party: body.party || {},
+    createdBy: req.user._id,
+  });
+  res.status(201).json({ success: true, data: document });
+}));
+
+router.put('/documents/:id', asyncHandler(async (req, res) => {
+  const body = req.body || {};
+  const totals = computeTotals(body);
+  const document = await Document.findByIdAndUpdate(
+    req.params.id,
+    { ...body, ...totals },
+    { new: true, runValidators: true },
+  );
+  if (!document) return res.status(404).json({ success: false, message: 'Document not found' });
+  res.json({ success: true, data: document });
+}));
+
+router.delete('/documents/:id', asyncHandler(async (req, res) => {
+  const document = await Document.findById(req.params.id);
+  if (!document) return res.status(404).json({ success: false, message: 'Document not found' });
+  if (document.status === 'paid') {
+    return res.status(400).json({ success: false, message: 'Paid documents cannot be deleted. Mark as void instead.' });
+  }
+  await Document.findByIdAndDelete(req.params.id);
   res.json({ success: true, data: {} });
 }));
 

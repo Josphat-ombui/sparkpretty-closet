@@ -7,7 +7,7 @@ import ThemePicker from '../../components/admin/ThemePicker';
 import { Card, PageHeader, Modal } from '../../components/admin/ui.jsx';
 import ImageUpload from '../../components/admin/ImageUpload';
 
-const GROUPS = ['general', 'store', 'contact', 'social', 'seo'];
+const GROUPS = ['general', 'store', 'business', 'contact', 'social', 'seo'];
 
 export default function Settings() {
   const [settings, setSettings] = useState([]);

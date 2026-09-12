@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, Eye, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Search, Eye, Trash2, FileText } from 'lucide-react';
 import { api, formatPrice } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { Card, PageHeader, Pagination, EmptyState, Modal, StatusPill, ORDER_STATUS, PAYMENT_STATUS } from '../../components/admin/ui.jsx';
@@ -111,6 +112,7 @@ export default function AdminOrders() {
                     <td className="px-5 py-3 text-xs text-text-light">{new Date(order.createdAt).toLocaleDateString()}</td>
                     <td className="px-5 py-3">
                       <div className="flex justify-end gap-1.5">
+                        <Link to={`/admin/documents/new?type=invoice&order=${order._id}`} className="p-2 rounded-lg text-text-light hover:text-accent hover:bg-accent-light transition-colors" title="Generate Invoice"><FileText size={15} /></Link>
                         <button onClick={() => setDetail(order)} className="p-2 rounded-lg text-text-light hover:text-primary hover:bg-primary/10 transition-colors" title="View"><Eye size={15} /></button>
                         <button onClick={() => deleteOrder(order)} className="p-2 rounded-lg text-text-light hover:text-error hover:bg-error/10 transition-colors" title="Delete"><Trash2 size={15} /></button>
                       </div>
