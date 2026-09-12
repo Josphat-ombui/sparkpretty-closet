@@ -1,4 +1,13 @@
-export default function Logo({ size = 40, name = 'Sparkpretty', sub = 'Closet', light = false, showWordmark = true, className = '', refined = true }) {
+export default function Logo({
+  size = 40,
+  name = 'Sparkpretty',
+  sub = 'Closet',
+  light = false,
+  showWordmark = true,
+  className = '',
+  sparkle = true,
+}) {
+  const mark = light ? '#FFFFFF' : 'var(--primary)';
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <svg
@@ -9,34 +18,44 @@ export default function Logo({ size = 40, name = 'Sparkpretty', sub = 'Closet', 
         aria-label={`${name} ${sub} logo`}
         className="shrink-0"
       >
-        <rect x="1.5" y="1.5" width="61" height="61" rx="17" fill="var(--primary)" />
-        <rect
-          x="1.5" y="1.5" width="61" height="61" rx="17"
-          fill="none"
-          stroke="var(--primary-dark)"
-          strokeOpacity="0.28"
-          strokeWidth="1"
-        />
+        {/* Main sparkle — four concave petals */}
         <path
-          d="M32 11.5c2.5 9.1 7 13.6 16.2 15.8-9.2 2.2-13.7 6.7-16.2 15.8-2.5-9.1-7-13.6-16.2-15.8 9.2-2.2 13.7-6.7 16.2-15.8Z"
-          fill="#FFFFFF"
+          d="M32 8.5 Q21.5 21.5 8.5 32 Q21.5 42.5 32 55.5 Q42.5 42.5 55.5 32 Q42.5 21.5 32 8.5 Z"
+          fill={mark}
         />
-        <circle cx="47.5" cy="16" r="3.1" fill="#FFFFFF" opacity="0.5" />
-        {refined && (
-          <circle cx="14" cy="50" r="1.8" fill="#FFFFFF" opacity="0.4" />
+        {/* Inner facet — tone-on-tone gem cut */}
+        <path
+          d="M32 16.5 L44 32 L32 47.5 L20 32 Z"
+          fill={mark}
+          opacity="0.16"
+        />
+        {sparkle && (
+          <>
+            {/* Trailing sparkle */}
+            <path
+              d="M52 7.5 Q49 10 46.5 13 Q49 16 52 18.5 Q55 16 57.5 13 Q55 10 52 7.5 Z"
+              fill={mark}
+              opacity="0.55"
+            />
+            {/* Gem dot */}
+            <circle cx="60.5" cy="20.5" r="1.7" fill={mark} opacity="0.4" />
+          </>
         )}
       </svg>
       {showWordmark && (
         <span className="flex flex-col leading-none text-left">
-          <span className={`font-heading font-bold ${size >= 40 ? 'text-lg md:text-xl' : 'text-base'} ${light ? 'text-white' : 'text-text'}`}>
+          <span
+            className={`font-heading font-semibold tracking-[-0.01em] ${
+              size >= 40 ? 'text-xl md:text-[22px]' : 'text-base'
+            } ${light ? 'text-white' : 'text-text'}`}
+          >
             {name}
           </span>
-          <span
-            className={`mt-0.5 text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.3em] ${
-              light ? 'text-white/70' : 'text-secondary'
-            }`}
-          >
-            {sub}
+          <span className={`mt-[5px] flex items-center gap-2 ${light ? 'text-white/70' : 'text-secondary'}`}>
+            <span className={`w-5 h-px ${light ? 'bg-white/50' : 'bg-primary/50'}`} aria-hidden="true" />
+            <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.3em]">
+              {sub}
+            </span>
           </span>
         </span>
       )}

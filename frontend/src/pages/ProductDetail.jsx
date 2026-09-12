@@ -3,12 +3,13 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ShoppingBag, Minus, Plus, ChevronRight, ChevronLeft, Star, Heart,
-  Package, Truck, RotateCcw, Shield, MessageCircle, Share2, Check,
+  Package, Truck, RotateCcw, Shield, MessageCircle, Share2, Check, X,
 } from 'lucide-react';
 import { api, formatPrice } from '../lib/api';
 import { useCart } from '../context/CartContext';
 import { useContent } from '../context/ContentContext';
 import SEO from '../components/SEO';
+import ProductImg from '../components/ProductImg';
 import toast from 'react-hot-toast';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { delay: 0.1, duration: 0.5 } };
@@ -26,6 +27,9 @@ export default function ProductDetail() {
   const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, title: '', comment: '' });
   const [zooming, setZooming] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const [failedImages, setFailedImages] = useState([]);
+  const [lightbox, setLightbox] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
   const imgRef = useRef(null);
   const { addItem, loading: cartLoading } = useCart();
 
@@ -33,7 +37,25 @@ export default function ProductDetail() {
     setLoading(true);
     api.get(`/products/${slug}`).then((r) => setProduct(r.data)).finally(() => setLoading(false));
     window.scrollTo(0, 0);
+    setFailedImages([]);
+    setLightbox(false);
   }, [slug]);
+
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setLightbox(false);
+      if (e.key === 'ArrowRight') nextLightbox(1);
+      if (e.key === 'ArrowLeft') nextLightbox(-1);
+    };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightbox, lightboxIdx]);
 
   if (loading) return (
     <div className="section-padding max-w-7xl mx-auto">
@@ -46,9 +68,28 @@ export default function ProductDetail() {
   if (!product) return <div className="section-padding text-center text-text-light">Product not found</div>;
 
   const variant = product.variants[selectedVariant];
-  const allImages = product.variants.flatMap((v) => v.images).filter(Boolean);
+  const allImages = [...new Set(product.variants.flatMap((v) => v.images).filter(Boolean))];
   const uniqueColors = [...new Set(product.variants.map((v) => v.color))];
   const sizesForColor = product.variants.filter((v) => v.color === variant.color);
+
+  const visibleImages = allImages.filter((img) => !failedImages.includes(img));
+  const safeIndex = Math.min(selectedImage, Math.max(0, visibleImages.length - 1));
+  const activeImage = visibleImages[safeIndex];
+
+  const failImage = (src, idx) => {
+    setFailedImages((prev) => [...prev, src]);
+    const next = visibleImages.find((img) => img !== src && allImages.indexOf(img) > idx);
+    setSelectedImage(next ? allImages.indexOf(next) : 0);
+  };
+
+  const openLightbox = (idx) => {
+    setLightboxIdx(Math.min(idx, Math.max(0, visibleImages.length - 1)));
+    setLightbox(true);
+  };
+
+  const nextLightbox = (dir) => {
+    setLightboxIdx((prev) => (prev + dir + visibleImages.length) % visibleImages.length);
+  };
 
   const handleAdd = () => {
     if (variant.stock < quantity) return toast.error('Not enough stock');
@@ -101,13 +142,17 @@ export default function ProductDetail() {
                 onMouseEnter={() => setZooming(true)}
                 onMouseLeave={() => setZooming(false)}
                 onMouseMove={handleMouseMove}
+                onClick={() => activeImage && openLightbox(safeIndex)}
               >
-                {allImages[selectedImage] ? (
+                {activeImage ? (
                   <img
-                    src={allImages[selectedImage]}
+                    src={activeImage}
                     alt={product.name}
+                    loading="eager"
+                    decoding="async"
                     className={`w-full h-full object-cover transition-transform duration-200 ${zooming ? 'scale-150' : ''}`}
                     style={zooming ? { transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` } : {}}
+                    onError={() => failImage(activeImage, allImages.indexOf(activeImage))}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-primary/20 font-heading text-xl px-8 text-center">
@@ -117,10 +162,20 @@ export default function ProductDetail() {
                 {zooming && (
                   <div className="absolute inset-0 border-2 border-primary/20 rounded-card pointer-events-none" />
                 )}
+                {activeImage && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); activeImage && openLightbox(safeIndex); }}
+                    className="absolute bottom-3 right-3 w-11 h-11 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-card hover:bg-white transition-colors"
+                    aria-label="View full size"
+                    title="Click to view full size"
+                  >
+                    <ChevronRight size={16} className="-rotate-45" />
+                  </button>
+                )}
               </div>
 
               {/* Thumbnails */}
-              {allImages.length > 1 && (
+              {visibleImages.length > 1 && (
                 <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
                   {allImages.map((img, i) => (
                     <button
@@ -128,16 +183,23 @@ export default function ProductDetail() {
                       onClick={() => setSelectedImage(i)}
                       className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
                         selectedImage === i ? 'border-primary' : 'border-border hover:border-primary/30'
-                      }`}
+                      } ${failedImages.includes(img) ? 'hidden' : ''}`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <img
+                        src={img}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover"
+                        onError={() => failImage(img, i)}
+                      />
                     </button>
                   ))}
                 </div>
               )}
 
               {/* Image navigation arrows */}
-              {allImages.length > 1 && (
+              {visibleImages.length > 1 && (
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={() => setSelectedImage((prev) => (prev === 0 ? allImages.length - 1 : prev - 1))}
@@ -151,7 +213,7 @@ export default function ProductDetail() {
                   >
                     <ChevronRight size={16} />
                   </button>
-                  <span className="text-xs text-text-muted self-center ml-2">{selectedImage + 1} / {allImages.length}</span>
+                  <span className="text-xs text-text-muted self-center ml-2">{safeIndex + 1} / {visibleImages.length}</span>
                 </div>
               )}
             </motion.div>
@@ -374,8 +436,14 @@ export default function ProductDetail() {
                   const rv = rel.variants?.[0] || {};
                   return (
                     <Link to={`/product/${rel.slug}`} key={rel._id} className="group card p-0 overflow-hidden hover:shadow-card-hover transition-all">
-                      <div className="aspect-square bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center text-primary/20 font-heading text-xs px-4 text-center">
-                        {rel.name}
+                      <div className="aspect-square bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">
+                        <ProductImg
+                          product={rel}
+                          variant={rv}
+                          eager
+                          className="w-full h-full text-xs"
+                          imgClassName="w-full h-full object-cover"
+                        />
                       </div>
                       <div className="p-3">
                         <h3 className="font-medium text-sm mb-1 group-hover:text-primary-dark transition-colors line-clamp-2">{rel.name}</h3>
@@ -392,6 +460,54 @@ export default function ProductDetail() {
           )}
         </div>
       </div>
+
+      {/* Fullscreen Lightbox */}
+      {lightbox && visibleImages.length > 0 && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 flex flex-col"
+          onClick={() => setLightbox(false)}
+          role="dialog"
+          aria-label="Product image viewer"
+        >
+          <div className="flex items-center justify-between px-4 py-3 text-white">
+            <span className="text-sm text-white/70">{product.name}</span>
+            <button
+              onClick={() => setLightbox(false)}
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              aria-label="Close viewer"
+            >
+              <X size={22} />
+            </button>
+          </div>
+          <div className="flex-1 flex items-center justify-center px-4 overflow-hidden">
+            <img
+              src={visibleImages[lightboxIdx]}
+              alt={product.name}
+              loading="eager"
+              decoding="async"
+              className="max-h-full max-w-full object-contain select-none"
+              draggable={false}
+            />
+          </div>
+          <div className="flex items-center justify-center gap-4 py-4">
+            <button
+              onClick={(e) => { e.stopPropagation(); nextLightbox(-1); }}
+              className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+              aria-label="Previous image"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <span className="text-white/80 text-sm font-medium w-20 text-center">{lightboxIdx + 1} / {visibleImages.length}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); nextLightbox(1); }}
+              className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+              aria-label="Next image"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

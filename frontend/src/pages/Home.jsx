@@ -12,6 +12,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useContent } from '../context/ContentContext';
 import SEO from '../components/SEO';
+import ProductImg from '../components/ProductImg';
 import toast from 'react-hot-toast';
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.6 } }) };
@@ -344,13 +345,13 @@ export default function Home() {
                   >
                     <Link to={`/product/${product.slug}`} className="block">
                       <div className="aspect-[3/4] bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">
-                        {variant.images?.[0] ? (
-                          <img src={variant.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center text-primary/20 font-heading text-base px-4 text-center">
-                            {product.name}
-                          </div>
-                        )}
+                        <ProductImg
+                          product={product}
+                          variant={variant}
+                          eager
+                          className="absolute inset-0 w-full h-full text-sm"
+                          imgClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
                         {salePrice && (
                           <span className="absolute top-3 left-3 bg-error text-white text-xs font-bold px-2.5 py-1 rounded-full">
                             -{Math.round(((price - salePrice) / price) * 100)}%
@@ -494,13 +495,13 @@ export default function Home() {
                   >
                     <Link to={`/product/${product.slug}`} className="block">
                       <div className="aspect-[3/4] bg-gradient-to-br from-primary/5 to-accent/10 relative overflow-hidden">
-                        {variant.images?.[0] ? (
-                          <img src={variant.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center text-primary/20 font-heading text-base px-4 text-center">
-                            {product.name}
-                          </div>
-                        )}
+                        <ProductImg
+                          product={product}
+                          variant={variant}
+                          eager
+                          className="absolute inset-0 w-full h-full text-sm"
+                          imgClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
                         {isNew && (
                           <span className="absolute top-3 left-3 bg-success text-white text-xs font-bold px-2.5 py-1 rounded-full">New</span>
                         )}
