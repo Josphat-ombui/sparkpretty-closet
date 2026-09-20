@@ -69,10 +69,16 @@ export default function ProductDetail() {
 
   const variant = product.variants[selectedVariant];
   const allImages = [...new Set(product.variants.flatMap((v) => v.images).filter(Boolean))];
+  // Fallback: generate a placeholder image URL if product has no images
+  const hasImages = allImages.length > 0;
+  const fallbackImage = hasImages
+    ? null
+    : 'https://placehold.co/600x800/' + (product.variants[0]?.colorHex?.replace('#', '') || '888888') + '/FFFFFF?text=' + encodeURIComponent(product.name);
+  const allImagesWithFallback = hasImages ? allImages : [fallbackImage];
   const uniqueColors = [...new Set(product.variants.map((v) => v.color))];
   const sizesForColor = product.variants.filter((v) => v.color === variant.color);
 
-  const visibleImages = allImages.filter((img) => !failedImages.includes(img));
+  const visibleImages = allImagesWithFallback.filter((img) => !failedImages.includes(img));
   const safeIndex = Math.min(selectedImage, Math.max(0, visibleImages.length - 1));
   const activeImage = visibleImages[safeIndex];
 
@@ -117,7 +123,7 @@ export default function ProductDetail() {
       <SEO
         title={product.name}
         description={product.description?.slice(0, 160) || product.name}
-        image={allImages[0]}
+        image={allImagesWithFallback[0]}
         url={`/product/${slug}`}
         type="product"
       />

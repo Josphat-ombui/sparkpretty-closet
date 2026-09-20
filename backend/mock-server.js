@@ -46,22 +46,22 @@ const seedData = async () => {
 
   const sampleProducts = [
     { name: 'Rose Garden Midi Dress', description: 'A stunning midi dress in soft rose pink.', categorySlug: 'dresses', featured: true, tags: ['new', 'bestseller'], variants: [
-      { size: 'S', color: 'Rose Pink', colorHex: '#F8BBD0', price: 3500, salePrice: 2800, sku: 'SGMD-S-RP', stock: 15, images: [] },
-      { size: 'M', color: 'Rose Pink', colorHex: '#F8BBD0', price: 3500, salePrice: 2800, sku: 'SGMD-M-RP', stock: 20, images: [] },
-      { size: 'L', color: 'Rose Pink', colorHex: '#F8BBD0', price: 3500, salePrice: 2800, sku: 'SGMD-L-RP', stock: 10, images: [] },
+      { size: 'S', color: 'Rose Pink', colorHex: '#F8BBD0', price: 3500, salePrice: 2800, sku: 'SGMD-S-RP', stock: 15, images: ['https://placehold.co/600x800/F8BBD0/FFFFFF?text=Rose+Garden+Midi+Dress'] },
+      { size: 'M', color: 'Rose Pink', colorHex: '#F8BBD0', price: 3500, salePrice: 2800, sku: 'SGMD-M-RP', stock: 20, images: ['https://placehold.co/600x800/F8BBD0/FFFFFF?text=Rose+Garden+Midi+Dress'] },
+      { size: 'L', color: 'Rose Pink', colorHex: '#F8BBD0', price: 3500, salePrice: 2800, sku: 'SGMD-L-RP', stock: 10, images: ['https://placehold.co/600x800/F8BBD0/FFFFFF?text=Rose+Garden+Midi+Dress'] },
     ]},
     { name: 'Silk Touch Blouse', description: 'Luxurious silk-feel blouse with delicate buttons.', categorySlug: 'tops', featured: false, tags: ['bestseller'], variants: [
-      { size: 'S', color: 'White', colorHex: '#FFFFFF', price: 1800, sku: 'STB-S-WH', stock: 25, images: [] },
-      { size: 'M', color: 'White', colorHex: '#FFFFFF', price: 1800, sku: 'STB-M-WH', stock: 18, images: [] },
+      { size: 'S', color: 'White', colorHex: '#FFFFFF', price: 1800, sku: 'STB-S-WH', stock: 25, images: ['https://placehold.co/600x800/E0E0E0/333333?text=Silk+Touch+Blouse'] },
+      { size: 'M', color: 'White', colorHex: '#FFFFFF', price: 1800, sku: 'STB-M-WH', stock: 18, images: ['https://placehold.co/600x800/E0E0E0/333333?text=Silk+Touch+Blouse'] },
     ]},
     { name: 'High-Waist Skinny Jeans', description: 'Classic high-waist skinny jeans with stretch.', categorySlug: 'bottoms', featured: true, tags: ['bestseller'], variants: [
-      { size: 'S', color: 'Dark Blue', colorHex: '#1565C0', price: 2400, sku: 'HWSJ-S-DB', stock: 20, images: [] },
-      { size: 'M', color: 'Dark Blue', colorHex: '#1565C0', price: 2400, sku: 'HWSJ-M-DB', stock: 25, images: [] },
-      { size: 'L', color: 'Dark Blue', colorHex: '#1565C0', price: 2400, sku: 'HWSJ-L-DB', stock: 15, images: [] },
+      { size: 'S', color: 'Dark Blue', colorHex: '#1565C0', price: 2400, sku: 'HWSJ-S-DB', stock: 20, images: ['https://placehold.co/600x800/1565C0/FFFFFF?text=High-Waist+Skinny+Jeans'] },
+      { size: 'M', color: 'Dark Blue', colorHex: '#1565C0', price: 2400, sku: 'HWSJ-M-DB', stock: 25, images: ['https://placehold.co/600x800/1565C0/FFFFFF?text=High-Waist+Skinny+Jeans'] },
+      { size: 'L', color: 'Dark Blue', colorHex: '#1565C0', price: 2400, sku: 'HWSJ-L-DB', stock: 15, images: ['https://placehold.co/600x800/1565C0/FFFFFF?text=High-Waist+Skinny+Jeans'] },
     ]},
     { name: 'Quilted Crossbody Bag', description: 'Chic quilted crossbody bag with gold chain strap.', categorySlug: 'accessories', featured: true, tags: ['new', 'bestseller'], variants: [
-      { size: 'One Size', color: 'Black', colorHex: '#000000', price: 2200, sku: 'QCB-OS-BK', stock: 20, images: [] },
-      { size: 'One Size', color: 'Rose Gold', colorHex: '#E8B4B8', price: 2200, sku: 'QCB-OS-RG', stock: 15, images: [] },
+      { size: 'One Size', color: 'Black', colorHex: '#000000', price: 2200, sku: 'QCB-OS-BK', stock: 20, images: ['https://placehold.co/600x800/000000/FFFFFF?text=Quilted+Crossbody+Bag'] },
+      { size: 'One Size', color: 'Rose Gold', colorHex: '#E8B4B8', price: 2200, sku: 'QCB-OS-RG', stock: 15, images: ['https://placehold.co/600x800/E8B4B8/333333?text=Quilted+Crossbody+Bag'] },
     ]},
   ];
 
