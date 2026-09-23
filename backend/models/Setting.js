@@ -9,6 +9,7 @@ const settingSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   placeholder: { type: String, default: '' },
   section: { type: String, default: 'general' },
+  enabled: { type: Boolean, default: true },
   lastUpdatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 

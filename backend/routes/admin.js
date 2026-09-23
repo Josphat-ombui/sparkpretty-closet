@@ -12,10 +12,13 @@ import ContentVersion from '../models/ContentVersion.js';
 import Document from '../models/Document.js';
 import { auth, adminOnly, editorOrAdmin } from '../middleware/auth.js';
 import { parsePagination } from '../utils/pagination.js';
+import CONTENT_REGISTRY, { sectionsFromRegistry, SECTION_LABELS } from '../data/content-registry.js';
 
 const router = Router();
 
-router.use(auth, adminOnly);
+// Every admin route requires a valid token; content routes additionally allow
+// the `editor` role (editorOrAdmin), everything else stays admin-only.
+router.use(auth);
 
 const asyncHandler = (fn) => (req, res) => {
   fn(req, res).catch((err) => res.status(500).json({ success: false, message: err.message }));
@@ -24,7 +27,7 @@ const asyncHandler = (fn) => (req, res) => {
 // ============================================================
 // Dashboard
 // ============================================================
-router.get('/stats', asyncHandler(async (req, res) => {
+router.get('/stats', adminOnly, asyncHandler(async (req, res) => {
   const [totalProducts, totalOrders, totalUsers, totalBlogs, totalSubscribers, unreadContacts, totalRevenue, todayOrders, lowStock] = await Promise.all([
     Product.countDocuments(),
     Order.countDocuments(),
@@ -46,7 +49,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
 }));
 
 // Sales analytics for charts (last N days)
-router.get('/analytics/sales', asyncHandler(async (req, res) => {
+router.get('/analytics/sales', adminOnly, asyncHandler(async (req, res) => {
   const days = Math.min(90, Math.max(7, parseInt(req.query.days, 10) || 30));
   const since = new Date();
   since.setDate(since.getDate() - (days - 1));
@@ -90,7 +93,7 @@ router.get('/analytics/sales', asyncHandler(async (req, res) => {
 }));
 
 // Top products by quantity sold
-router.get('/analytics/top-products', asyncHandler(async (req, res) => {
+router.get('/analytics/top-products', adminOnly, asyncHandler(async (req, res) => {
   const rows = await Order.aggregate([
     { $match: { status: { $ne: 'cancelled' } } },
     { $unwind: '$items' },
@@ -102,7 +105,7 @@ router.get('/analytics/top-products', asyncHandler(async (req, res) => {
 }));
 
 // Orders by status
-router.get('/analytics/orders', asyncHandler(async (req, res) => {
+router.get('/analytics/orders', adminOnly, asyncHandler(async (req, res) => {
   const rows = await Order.aggregate([
     { $group: { _id: '$status', count: { $sum: 1 } } },
     { $sort: { _id: 1 } },
@@ -113,7 +116,7 @@ router.get('/analytics/orders', asyncHandler(async (req, res) => {
 // ============================================================
 // Users
 // ============================================================
-router.get('/users', asyncHandler(async (req, res) => {
+router.get('/users', adminOnly, asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
   const search = (req.query.search || '').toString().trim();
   const role = (req.query.role || '').toString().trim();
@@ -128,13 +131,13 @@ router.get('/users', asyncHandler(async (req, res) => {
   res.json({ success: true, data: { items, total, page, pages: Math.ceil(total / limit) || 1, limit } });
 }));
 
-router.get('/users/:id', asyncHandler(async (req, res) => {
+router.get('/users/:id', adminOnly, asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id).select('-password');
   if (!user) return res.status(404).json({ success: false, message: 'User not found' });
   res.json({ success: true, data: user });
 }));
 
-router.post('/users', asyncHandler(async (req, res) => {
+router.post('/users', adminOnly, asyncHandler(async (req, res) => {
   const { name, email, phone, role, password } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
@@ -145,7 +148,7 @@ router.post('/users', asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, data: { _id: user._id, name: user.name, email: user.email, phone: user.phone, role: user.role } });
 }));
 
-router.put('/users/:id', asyncHandler(async (req, res) => {
+router.put('/users/:id', adminOnly, asyncHandler(async (req, res) => {
   const { name, email, phone, role, password, addresses } = req.body;
   const update = {};
   if (name !== undefined) update.name = name;
@@ -162,7 +165,7 @@ router.put('/users/:id', asyncHandler(async (req, res) => {
   res.json({ success: true, data: user });
 }));
 
-router.delete('/users/:id', asyncHandler(async (req, res) => {
+router.delete('/users/:id', adminOnly, asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) return res.status(404).json({ success: false, message: 'User not found' });
   if (user._id.toString() === req.user._id.toString()) {
@@ -175,7 +178,7 @@ router.delete('/users/:id', asyncHandler(async (req, res) => {
 // ============================================================
 // Products
 // ============================================================
-router.get('/products', asyncHandler(async (req, res) => {
+router.get('/products', adminOnly, asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
   const search = (req.query.search || '').toString().trim();
   const category = (req.query.category || '').toString().trim();
@@ -190,25 +193,25 @@ router.get('/products', asyncHandler(async (req, res) => {
   res.json({ success: true, data: { items, total, page, pages: Math.ceil(total / limit) || 1, limit } });
 }));
 
-router.get('/products/:id', asyncHandler(async (req, res) => {
+router.get('/products/:id', adminOnly, asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id).populate('category');
   if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
   res.json({ success: true, data: product });
 }));
 
-router.post('/products', asyncHandler(async (req, res) => {
+router.post('/products', adminOnly, asyncHandler(async (req, res) => {
   const product = await Product.create(req.body);
   res.status(201).json({ success: true, data: product });
 }));
 
-router.put('/products/:id', asyncHandler(async (req, res) => {
+router.put('/products/:id', adminOnly, asyncHandler(async (req, res) => {
   if (req.body.slug) delete req.body.slug;
   const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
   if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
   res.json({ success: true, data: product });
 }));
 
-router.delete('/products/:id', asyncHandler(async (req, res) => {
+router.delete('/products/:id', adminOnly, asyncHandler(async (req, res) => {
   await Product.findByIdAndDelete(req.params.id);
   res.json({ success: true, data: {} });
 }));
@@ -216,7 +219,7 @@ router.delete('/products/:id', asyncHandler(async (req, res) => {
 // ============================================================
 // Categories
 // ============================================================
-router.get('/categories', asyncHandler(async (req, res) => {
+router.get('/categories', adminOnly, asyncHandler(async (req, res) => {
   const categories = await Category.find().sort({ order: 1, name: 1 });
   const withCounts = await Promise.all(categories.map(async (c) => ({
     ...c.toObject(),
@@ -225,25 +228,25 @@ router.get('/categories', asyncHandler(async (req, res) => {
   res.json({ success: true, data: withCounts });
 }));
 
-router.get('/categories/:id', asyncHandler(async (req, res) => {
+router.get('/categories/:id', adminOnly, asyncHandler(async (req, res) => {
   const category = await Category.findById(req.params.id);
   if (!category) return res.status(404).json({ success: false, message: 'Category not found' });
   res.json({ success: true, data: category });
 }));
 
-router.post('/categories', asyncHandler(async (req, res) => {
+router.post('/categories', adminOnly, asyncHandler(async (req, res) => {
   const category = await Category.create(req.body);
   res.status(201).json({ success: true, data: category });
 }));
 
-router.put('/categories/:id', asyncHandler(async (req, res) => {
+router.put('/categories/:id', adminOnly, asyncHandler(async (req, res) => {
   if (req.body.slug) delete req.body.slug;
   const category = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
   if (!category) return res.status(404).json({ success: false, message: 'Category not found' });
   res.json({ success: true, data: category });
 }));
 
-router.delete('/categories/:id', asyncHandler(async (req, res) => {
+router.delete('/categories/:id', adminOnly, asyncHandler(async (req, res) => {
   const count = await Product.countDocuments({ category: req.params.id });
   if (count > 0) {
     return res.status(400).json({ success: false, message: `Cannot delete: ${count} product(s) belong to this category` });
@@ -255,7 +258,7 @@ router.delete('/categories/:id', asyncHandler(async (req, res) => {
 // ============================================================
 // Orders
 // ============================================================
-router.get('/orders', asyncHandler(async (req, res) => {
+router.get('/orders', adminOnly, asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
   const status = (req.query.status || '').toString().trim();
   const search = (req.query.search || '').toString().trim();
@@ -275,18 +278,18 @@ router.get('/orders', asyncHandler(async (req, res) => {
   res.json({ success: true, data: { items, total, page, pages: Math.ceil(total / limit) || 1, limit } });
 }));
 
-router.get('/orders/:id', asyncHandler(async (req, res) => {
+router.get('/orders/:id', adminOnly, asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id).populate('user', 'name email phone');
   if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
   res.json({ success: true, data: order });
 }));
 
-router.post('/orders', asyncHandler(async (req, res) => {
+router.post('/orders', adminOnly, asyncHandler(async (req, res) => {
   const order = await Order.create(req.body);
   res.status(201).json({ success: true, data: order });
 }));
 
-router.put('/orders/:id/status', asyncHandler(async (req, res) => {
+router.put('/orders/:id/status', adminOnly, asyncHandler(async (req, res) => {
   const allowed = ['pending', 'paid', 'shipped', 'delivered', 'cancelled'];
   if (!allowed.includes(req.body.status)) {
     return res.status(400).json({ success: false, message: 'Invalid status' });
@@ -296,7 +299,7 @@ router.put('/orders/:id/status', asyncHandler(async (req, res) => {
   res.json({ success: true, data: order });
 }));
 
-router.delete('/orders/:id', asyncHandler(async (req, res) => {
+router.delete('/orders/:id', adminOnly, asyncHandler(async (req, res) => {
   const order = await Order.findById(req.params.id);
   if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
   if (order.status === 'paid') {
@@ -309,7 +312,7 @@ router.delete('/orders/:id', asyncHandler(async (req, res) => {
 // ============================================================
 // Blog
 // ============================================================
-router.get('/blog', asyncHandler(async (req, res) => {
+router.get('/blog', adminOnly, asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
   const search = (req.query.search || '').toString().trim();
   const filter = {};
@@ -321,25 +324,25 @@ router.get('/blog', asyncHandler(async (req, res) => {
   res.json({ success: true, data: { items, total, page, pages: Math.ceil(total / limit) || 1, limit } });
 }));
 
-router.get('/blog/:id', asyncHandler(async (req, res) => {
+router.get('/blog/:id', adminOnly, asyncHandler(async (req, res) => {
   const post = await Blog.findById(req.params.id);
   if (!post) return res.status(404).json({ success: false, message: 'Post not found' });
   res.json({ success: true, data: post });
 }));
 
-router.post('/blog', asyncHandler(async (req, res) => {
+router.post('/blog', adminOnly, asyncHandler(async (req, res) => {
   const post = await Blog.create(req.body);
   res.status(201).json({ success: true, data: post });
 }));
 
-router.put('/blog/:id', asyncHandler(async (req, res) => {
+router.put('/blog/:id', adminOnly, asyncHandler(async (req, res) => {
   if (req.body.slug) delete req.body.slug;
   const post = await Blog.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
   if (!post) return res.status(404).json({ success: false, message: 'Post not found' });
   res.json({ success: true, data: post });
 }));
 
-router.delete('/blog/:id', asyncHandler(async (req, res) => {
+router.delete('/blog/:id', adminOnly, asyncHandler(async (req, res) => {
   await Blog.findByIdAndDelete(req.params.id);
   res.json({ success: true, data: {} });
 }));
@@ -347,7 +350,7 @@ router.delete('/blog/:id', asyncHandler(async (req, res) => {
 // ============================================================
 // Subscribers
 // ============================================================
-router.get('/subscribers', asyncHandler(async (req, res) => {
+router.get('/subscribers', adminOnly, asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
   const search = (req.query.search || '').toString().trim();
   const active = (req.query.active || '').toString().trim();
@@ -361,7 +364,7 @@ router.get('/subscribers', asyncHandler(async (req, res) => {
   res.json({ success: true, data: { items, total, page, pages: Math.ceil(total / limit) || 1, limit } });
 }));
 
-router.delete('/subscribers/:id', asyncHandler(async (req, res) => {
+router.delete('/subscribers/:id', adminOnly, asyncHandler(async (req, res) => {
   await Subscriber.findByIdAndDelete(req.params.id);
   res.json({ success: true, data: {} });
 }));
@@ -369,7 +372,7 @@ router.delete('/subscribers/:id', asyncHandler(async (req, res) => {
 // ============================================================
 // Contact messages
 // ============================================================
-router.get('/contacts', asyncHandler(async (req, res) => {
+router.get('/contacts', adminOnly, asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
   const read = (req.query.read || '').toString().trim();
   const filter = {};
@@ -381,13 +384,13 @@ router.get('/contacts', asyncHandler(async (req, res) => {
   res.json({ success: true, data: { items, total, page, pages: Math.ceil(total / limit) || 1, limit } });
 }));
 
-router.get('/contacts/:id', asyncHandler(async (req, res) => {
+router.get('/contacts/:id', adminOnly, asyncHandler(async (req, res) => {
   const message = await ContactMessage.findById(req.params.id);
   if (!message) return res.status(404).json({ success: false, message: 'Message not found' });
   res.json({ success: true, data: message });
 }));
 
-router.put('/contacts/:id', asyncHandler(async (req, res) => {
+router.put('/contacts/:id', adminOnly, asyncHandler(async (req, res) => {
   const { read, replied } = req.body;
   const update = {};
   if (typeof read !== 'undefined') update.read = !!read;
@@ -397,7 +400,7 @@ router.put('/contacts/:id', asyncHandler(async (req, res) => {
   res.json({ success: true, data: message });
 }));
 
-router.delete('/contacts/:id', asyncHandler(async (req, res) => {
+router.delete('/contacts/:id', adminOnly, asyncHandler(async (req, res) => {
   await ContactMessage.findByIdAndDelete(req.params.id);
   res.json({ success: true, data: {} });
 }));
@@ -405,23 +408,23 @@ router.delete('/contacts/:id', asyncHandler(async (req, res) => {
 // ============================================================
 // Banners (hero / promo / story)
 // ============================================================
-router.get('/banners', asyncHandler(async (req, res) => {
+router.get('/banners', editorOrAdmin, asyncHandler(async (req, res) => {
   const banners = await Banner.find().sort({ order: 1, createdAt: -1 });
   res.json({ success: true, data: banners });
 }));
 
-router.post('/banners', asyncHandler(async (req, res) => {
+router.post('/banners', editorOrAdmin, asyncHandler(async (req, res) => {
   const banner = await Banner.create(req.body);
   res.status(201).json({ success: true, data: banner });
 }));
 
-router.put('/banners/:id', asyncHandler(async (req, res) => {
+router.put('/banners/:id', editorOrAdmin, asyncHandler(async (req, res) => {
   const banner = await Banner.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
   if (!banner) return res.status(404).json({ success: false, message: 'Banner not found' });
   res.json({ success: true, data: banner });
 }));
 
-router.delete('/banners/:id', asyncHandler(async (req, res) => {
+router.delete('/banners/:id', editorOrAdmin, asyncHandler(async (req, res) => {
   await Banner.findByIdAndDelete(req.params.id);
   res.json({ success: true, data: {} });
 }));
@@ -451,6 +454,64 @@ router.get('/content/sections', editorOrAdmin, asyncHandler(async (req, res) => 
   res.json({ success: true, data: sections.sort() });
 }));
 
+// Full blueprint of every editable field (key, type, label, default...) grouped by section
+router.get('/content/registry', editorOrAdmin, asyncHandler(async (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      sections: sectionsFromRegistry(),
+      sectionLabels: SECTION_LABELS,
+      total: CONTENT_REGISTRY.length,
+    },
+  });
+}));
+
+// Bootstrap/diff the registry into the DB. Existing fields keep their customized
+// values — only metadata + defaults for missing keys are written. Idempotent.
+router.post('/content/seed', editorOrAdmin, asyncHandler(async (req, res) => {
+  const entries = Array.isArray(req.body && req.body.entries) ? req.body.entries : CONTENT_REGISTRY;
+  let created = 0;
+  let updated = 0;
+  const keys = [];
+  for (const entry of entries) {
+    if (!entry || !entry.key) continue;
+    const existing = await Setting.findOne({ key: entry.key });
+    if (existing) {
+      await Setting.findOneAndUpdate(
+        { key: entry.key },
+        {
+          $set: {
+            type: entry.type || existing.type,
+            group: entry.group || existing.group,
+            label: entry.label || existing.label,
+            section: entry.section || existing.section,
+            description: entry.description !== undefined ? entry.description : (existing.description || ''),
+            placeholder: entry.placeholder !== undefined ? entry.placeholder : (existing.placeholder || ''),
+            enabled: entry.enabled !== undefined ? entry.enabled : true,
+          },
+        },
+        { new: true },
+      );
+      updated++;
+    } else {
+      await Setting.create({
+        key: entry.key,
+        value: entry.value,
+        type: entry.type || 'text',
+        group: entry.group || 'content',
+        label: entry.label || entry.key,
+        section: entry.section || 'general',
+        description: entry.description || '',
+        placeholder: entry.placeholder || '',
+        enabled: entry.enabled !== undefined ? entry.enabled : true,
+      });
+      created++;
+    }
+    keys.push(entry.key);
+  }
+  res.json({ success: true, data: { created, updated, total: keys.length, keys } });
+}));
+
 router.get('/content/:key', editorOrAdmin, asyncHandler(async (req, res) => {
   const setting = await Setting.findOne({ key: req.params.key });
   if (!setting) return res.status(404).json({ success: false, message: 'Content not found' });
@@ -458,7 +519,7 @@ router.get('/content/:key', editorOrAdmin, asyncHandler(async (req, res) => {
 }));
 
 router.put('/content/:key', editorOrAdmin, asyncHandler(async (req, res) => {
-  const { value, label, description, placeholder, section, type } = req.body;
+  const { value, label, description, placeholder, section, type, enabled } = req.body;
   const previous = await Setting.findOne({ key: req.params.key });
 
   if (previous) {
@@ -481,6 +542,7 @@ router.put('/content/:key', editorOrAdmin, asyncHandler(async (req, res) => {
         ...(placeholder !== undefined && { placeholder }),
         ...(section !== undefined && { section }),
         ...(type !== undefined && { type }),
+        ...(enabled !== undefined && { enabled: !!enabled }),
         lastUpdatedBy: req.user._id,
       },
     },
@@ -516,6 +578,7 @@ router.post('/content/bulk', editorOrAdmin, asyncHandler(async (req, res) => {
           section: entry.section || 'general',
           description: entry.description || '',
           placeholder: entry.placeholder || '',
+          ...(entry.enabled !== undefined && { enabled: !!entry.enabled }),
           lastUpdatedBy: req.user._id,
         },
       },
@@ -573,12 +636,12 @@ router.post('/content/:key/revert/:versionId', adminOnly, asyncHandler(async (re
 // ============================================================
 // Settings (site content / configuration)
 // ============================================================
-router.get('/settings', asyncHandler(async (req, res) => {
+router.get('/settings', editorOrAdmin, asyncHandler(async (req, res) => {
   const settings = await Setting.find().sort({ group: 1, label: 1 });
   res.json({ success: true, data: settings });
 }));
 
-router.put('/settings/bulk', asyncHandler(async (req, res) => {
+router.put('/settings/bulk', editorOrAdmin, asyncHandler(async (req, res) => {
   const entries = req.body || [];
   const keys = [];
   for (const entry of entries) {
@@ -593,13 +656,13 @@ router.put('/settings/bulk', asyncHandler(async (req, res) => {
   res.json({ success: true, data: keys });
 }));
 
-router.get('/settings/:key', asyncHandler(async (req, res) => {
+router.get('/settings/:key', editorOrAdmin, asyncHandler(async (req, res) => {
   const setting = await Setting.findOne({ key: req.params.key });
   if (!setting) return res.status(404).json({ success: false, message: 'Setting not found' });
   res.json({ success: true, data: setting });
 }));
 
-router.put('/settings/:key', asyncHandler(async (req, res) => {
+router.put('/settings/:key', editorOrAdmin, asyncHandler(async (req, res) => {
   const { value, type, group, label } = req.body;
   const setting = await Setting.findOneAndUpdate(
     { key: req.params.key },
@@ -609,7 +672,7 @@ router.put('/settings/:key', asyncHandler(async (req, res) => {
   res.json({ success: true, data: setting });
 }));
 
-router.delete('/settings/:key', asyncHandler(async (req, res) => {
+router.delete('/settings/:key', editorOrAdmin, asyncHandler(async (req, res) => {
   await Setting.findOneAndDelete({ key: req.params.key });
   res.json({ success: true, data: {} });
 }));
@@ -650,7 +713,7 @@ const computeTotals = (payload) => {
   return { items, subtotal: round2(subtotal), discount: round2(Math.min(discount, subtotal)), taxRate, taxAmount, shipping, total, amountPaid, balance };
 };
 
-router.get('/documents/next-number', asyncHandler(async (req, res) => {
+router.get('/documents/next-number', adminOnly, asyncHandler(async (req, res) => {
   const type = req.query.type || 'invoice';
   const prefix = DOC_PREFIX[type] || 'DOC';
   const year = new Date().getFullYear();
@@ -662,7 +725,7 @@ router.get('/documents/next-number', asyncHandler(async (req, res) => {
   res.json({ success: true, data: number });
 }));
 
-router.get('/documents', asyncHandler(async (req, res) => {
+router.get('/documents', adminOnly, asyncHandler(async (req, res) => {
   const { page, limit, skip } = parsePagination(req.query);
   const type = (req.query.type || '').toString().trim();
   const status = (req.query.status || '').toString().trim();
@@ -685,7 +748,7 @@ router.get('/documents', asyncHandler(async (req, res) => {
   res.json({ success: true, data: { items, total, page, pages: Math.ceil(total / limit) || 1, limit } });
 }));
 
-router.get('/documents/summary', asyncHandler(async (req, res) => {
+router.get('/documents/summary', adminOnly, asyncHandler(async (req, res) => {
   const year = new Date().getFullYear();
   const start = new Date(`${year}-01-01T00:00:00.000Z`);
   const [totalDocs, byType, invoiced, collected] = await Promise.all([
@@ -711,13 +774,13 @@ router.get('/documents/summary', asyncHandler(async (req, res) => {
   });
 }));
 
-router.get('/documents/:id', asyncHandler(async (req, res) => {
+router.get('/documents/:id', adminOnly, asyncHandler(async (req, res) => {
   const document = await Document.findById(req.params.id);
   if (!document) return res.status(404).json({ success: false, message: 'Document not found' });
   res.json({ success: true, data: document });
 }));
 
-router.post('/documents', asyncHandler(async (req, res) => {
+router.post('/documents', adminOnly, asyncHandler(async (req, res) => {
   const body = req.body || {};
   if (!body.type || !DOC_PREFIX[body.type]) {
     return res.status(400).json({ success: false, message: 'A valid document type is required' });
@@ -741,7 +804,7 @@ router.post('/documents', asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, data: document });
 }));
 
-router.put('/documents/:id', asyncHandler(async (req, res) => {
+router.put('/documents/:id', adminOnly, asyncHandler(async (req, res) => {
   const body = req.body || {};
   const totals = computeTotals(body);
   const document = await Document.findByIdAndUpdate(
@@ -753,7 +816,7 @@ router.put('/documents/:id', asyncHandler(async (req, res) => {
   res.json({ success: true, data: document });
 }));
 
-router.delete('/documents/:id', asyncHandler(async (req, res) => {
+router.delete('/documents/:id', adminOnly, asyncHandler(async (req, res) => {
   const document = await Document.findById(req.params.id);
   if (!document) return res.status(404).json({ success: false, message: 'Document not found' });
   if (document.status === 'paid') {

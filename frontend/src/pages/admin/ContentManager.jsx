@@ -3,6 +3,7 @@ import {
   Save, Search, ChevronDown, ChevronRight, History,
   Undo2, Filter, FileText, Image as ImageIcon, Phone, Mail, Globe,
   Type, AlignLeft, Hash, List, Plus, Trash2,
+  Navigation, LayoutGrid, Star, BookOpen, ShoppingBag, Truck, Ruler, Briefcase,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../lib/api';
@@ -11,12 +12,16 @@ import ImageUpload from '../../components/admin/ImageUpload';
 
 const SECTION_META = {
   general: { label: 'General / Site Info', icon: Globe },
+  header: { label: 'Header & Navigation', icon: Navigation },
   contact: { label: 'Contact Information', icon: Phone },
   social: { label: 'Social Links', icon: Globe },
   home_hero: { label: 'Home - Hero Section', icon: ImageIcon },
+  home_categories: { label: 'Home - Shop by Category', icon: LayoutGrid },
   home_story: { label: 'Home - Story Section', icon: FileText },
+  home_tabs: { label: 'Home - Best Sellers / New Arrivals', icon: Star },
   home_gallery: { label: 'Home - Gallery', icon: ImageIcon },
   home_testimonials: { label: 'Home - Testimonials', icon: AlignLeft },
+  home_journal: { label: 'Home - From Our Journal', icon: BookOpen },
   home_promo: { label: 'Home - Promo Banner', icon: FileText },
   home_newsletter: { label: 'Home - Newsletter', icon: Mail },
   home_cta: { label: 'Home - Final CTA', icon: FileText },
@@ -24,6 +29,11 @@ const SECTION_META = {
   footer: { label: 'Footer', icon: FileText },
   about: { label: 'About Page', icon: FileText },
   contact_page: { label: 'Contact Page Content', icon: Phone },
+  shopping: { label: 'Shopping & Product Pages', icon: ShoppingBag },
+  shipping: { label: 'Shipping & Trust', icon: Truck },
+  blog: { label: 'Blog & Journal', icon: BookOpen },
+  size_guide: { label: 'Size Guide', icon: Ruler },
+  business: { label: 'Business / Documents', icon: Briefcase },
   seo: { label: 'SEO Defaults', icon: Globe },
 };
 

@@ -8,6 +8,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node seed.js",
+    "seed:content": "node seed-content.js",
     "setup:local": "node setup-local.js",
     "mock": "node mock-server.js"
   },
