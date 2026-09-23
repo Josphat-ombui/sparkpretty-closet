@@ -36,6 +36,7 @@ const navSections = [
     label: 'Content',
     items: [
       { to: '/admin/content', label: 'Content Manager', icon: Edit3 },
+      { to: '/admin/media', label: 'Media Library', icon: Image },
       { to: '/admin/blog', label: 'Blog Posts', icon: FileText },
       { to: '/admin/banners', label: 'Banners', icon: Image },
       { to: '/admin/settings', label: 'Site Settings', icon: Settings },

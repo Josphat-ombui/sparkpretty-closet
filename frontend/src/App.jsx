@@ -32,6 +32,7 @@ const AdminUsers = lazy(() => import('./pages/admin/Users'));
 const AdminSubscribers = lazy(() => import('./pages/admin/Subscribers'));
 const AdminContacts = lazy(() => import('./pages/admin/Contacts'));
 const AdminBanners = lazy(() => import('./pages/admin/Banners'));
+const AdminMediaLibrary = lazy(() => import('./pages/admin/MediaLibrary'));
 const AdminSettings = lazy(() => import('./pages/admin/Settings'));
 const AdminContentManager = lazy(() => import('./pages/admin/ContentManager'));
 const AdminDocuments = lazy(() => import('./pages/admin/Documents'));
@@ -97,6 +98,7 @@ export default function App() {
           <Route path="/admin/contacts" element={adminShell(withSuspense(<AdminContacts />))} />
           <Route path="/admin/users" element={adminShell(withSuspense(<AdminUsers />))} />
           <Route path="/admin/banners" element={adminShell(withSuspense(<AdminBanners />))} />
+          <Route path="/admin/media" element={editorShell(withSuspense(<AdminMediaLibrary />))} />
           <Route path="/admin/content" element={editorShell(withSuspense(<AdminContentManager />))} />
           <Route path="/admin/settings" element={adminShell(withSuspense(<AdminSettings />))} />
           <Route path="/admin/documents" element={adminShell(withSuspense(<AdminDocuments />))} />
