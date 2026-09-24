@@ -233,7 +233,7 @@ export default function Home() {
                   to={`/shop?category=${cat.slug}`}
                   className="group block aspect-[3/4] rounded-card overflow-hidden relative"
                 >
-                  <img src={cat.image} alt={cat.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src={cat.image} alt={cat.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
                     <h3 className="font-heading text-xl font-bold group-hover:translate-x-1 transition-transform duration-300">{cat.name}</h3>
@@ -295,7 +295,7 @@ export default function Home() {
               className="relative"
             >
               <div className="aspect-[4/5] rounded-2xl overflow-hidden">
-                <img src={get('home_story_image', '/images/hero-3.jpeg')} alt="Our fashion story" className="w-full h-full object-cover" />
+                <img src={get('home_story_image', '/images/hero-3.jpeg')} alt="Our fashion story" loading="lazy" className="w-full h-full object-cover" />
               </div>
               <div className="absolute -top-4 -right-4 bg-white rounded-xl p-5 shadow-modal max-w-xs">
                 <div className="flex items-center gap-3 mb-2">
@@ -417,7 +417,7 @@ export default function Home() {
             className="relative rounded-2xl overflow-hidden"
           >
             <div className="gradient-hero py-16 md:py-20 px-8 md:px-16 text-center relative">
-              <img src={promoBanner?.image || '/images/hero-5.jpeg'} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+              <img src={promoBanner?.image || '/images/hero-5.jpeg'} alt="" aria-hidden="true" loading="lazy" className="absolute inset-0 w-full h-full object-cover opacity-30" />
               <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
               <div className="relative z-10">
                 <motion.span
@@ -576,7 +576,7 @@ export default function Home() {
                 }`}
               >
                 <div className={`w-full ${i === 0 || i === 3 ? 'aspect-[3/5]' : 'aspect-square'} relative overflow-hidden`}>
-                  <img src={img.image} alt={img.alt} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src={img.image} alt={img.alt} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -723,7 +723,7 @@ export default function Home() {
                   <Link to={`/blog/${post.slug}`} className="block">
                     <div className="aspect-video bg-gradient-to-br from-primary/5 to-accent/10 relative overflow-hidden">
                       {post.coverImage ? (
-                        <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img src={post.coverImage} alt={post.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center text-primary/20">
                           <BookOpen size={32} />

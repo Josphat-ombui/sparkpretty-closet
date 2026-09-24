@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag, User, Search, Menu, X, Phone, Palette, Mail,
   Clock, Instagram, Facebook, Twitter, Truck, Sparkles, Shield,
-  ChevronRight, FileText,
+  ChevronRight,
 } from 'lucide-react';
 import Logo from './Logo';
 import { useCart } from '../context/CartContext';
@@ -131,8 +130,7 @@ export default function Header() {
                 >
                   {link.label}
                   {isActive(link.to) && (
-                    <motion.span
-                      layoutId="nav-indicator"
+                    <span
                       className="absolute -bottom-0.5 left-0 right-0 h-[2px] rounded-full"
                       aria-hidden="true"
                       style={{ backgroundColor: 'var(--primary)' }}
@@ -209,129 +207,101 @@ export default function Header() {
                 aria-label={`Shopping bag, ${count} items`}
               >
                 <ShoppingBag size={19} aria-hidden="true" />
-                <AnimatePresence>
-                  {count > 0 && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                      className="absolute -top-0.5 -right-0.5 bg-secondary text-white text-[10px] w-[18px] h-[18px] rounded-full flex items-center justify-center font-bold"
-                      aria-hidden="true"
-                    >
-                      {count}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+                {count > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 bg-secondary text-white text-[10px] w-[18px] h-[18px] rounded-full flex items-center justify-center font-bold"
+                    aria-hidden="true"
+                  >
+                    {count}
+                  </span>
+                )}
               </button>
             </div>
           </div>
         </div>
 
-        <AnimatePresence>
-          {searchOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="border-t border-border overflow-hidden bg-white"
-              role="search"
-              aria-label="Product search"
-            >
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <form onSubmit={(e) => { e.preventDefault(); const q = e.target.search.value.trim(); if (q) window.location.href = `/shop?search=${encodeURIComponent(q)}`; }}>
-                  <label htmlFor="header-search" className="sr-only">Search products</label>
-                  <input
-                    id="header-search"
-                    name="search"
-                    type="search"
-                    placeholder="Search products..."
-                    className="input-field"
-                    autoFocus
-                    aria-label="Search products"
-                  />
-                </form>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {searchOpen && (
+          <div className="border-t border-border overflow-hidden bg-white" role="search" aria-label="Product search">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <form onSubmit={(e) => { e.preventDefault(); const q = e.target.search.value.trim(); if (q) window.location.href = `/shop?search=${encodeURIComponent(q)}`; }}>
+                <label htmlFor="header-search" className="sr-only">Search products</label>
+                <input
+                  id="header-search"
+                  name="search"
+                  type="search"
+                  placeholder="Search products..."
+                  className="input-field"
+                  autoFocus
+                  aria-label="Search products"
+                />
+              </form>
+            </div>
+          </div>
+        )}
       </header>
 
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/30 z-40 md:hidden"
-              onClick={() => setMobileOpen(false)}
-              aria-hidden="true"
-            />
-            <motion.nav
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-              className="fixed top-0 left-0 bottom-0 w-80 bg-white z-50 shadow-modal overflow-y-auto md:hidden"
-              aria-label="Mobile menu"
-            >
-              <div className="border-b border-border px-6 py-5 flex items-center justify-between">
-                <Logo size={38} name={brandFirst} sub={brandSecond} />
-                <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="p-2 -mr-2 text-text-light hover:text-text">
-                  <X size={22} aria-hidden="true" />
-                </button>
-              </div>
-              <div className="px-6 py-6 flex flex-col">
-                {navLinks.map((link, i) => (
-                  <motion.div
-                    key={link.to}
-                    initial={{ opacity: 0, x: -16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.06 }}
+      {mobileOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/30 z-40 md:hidden"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+          <nav
+            className="fixed top-0 left-0 bottom-0 w-80 bg-white z-50 shadow-modal overflow-y-auto md:hidden"
+            aria-label="Mobile menu"
+          >
+            <div className="border-b border-border px-6 py-5 flex items-center justify-between">
+              <Logo size={38} name={brandFirst} sub={brandSecond} />
+              <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="p-2 -mr-2 text-text-light hover:text-text">
+                <X size={22} aria-hidden="true" />
+              </button>
+            </div>
+            <div className="px-6 py-6 flex flex-col">
+              {navLinks.map((link) => (
+                <div key={link.to}>
+                  <Link
+                    to={link.to}
+                    className={`flex items-center justify-between py-3 border-b border-border/60 text-[15px] font-medium ${
+                      isActive(link.to) ? 'text-secondary' : 'text-text'
+                    }`}
+                    aria-current={isActive(link.to) ? 'page' : undefined}
                   >
-                    <Link
-                      to={link.to}
-                      className={`flex items-center justify-between py-3 border-b border-border/60 text-[15px] font-medium ${
-                        isActive(link.to) ? 'text-secondary' : 'text-text'
-                      }`}
-                      aria-current={isActive(link.to) ? 'page' : undefined}
-                    >
-                      {link.label}
-                      <ChevronRight size={16} className="text-text-muted" />
-                    </Link>
-                  </motion.div>
-                ))}
+                    {link.label}
+                    <ChevronRight size={16} className="text-text-muted" />
+                  </Link>
+                </div>
+              ))}
 
-                {user?.role === 'admin' && (
-                  <motion.div key="admin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-                    <Link to="/admin" className="flex items-center gap-2 py-3 text-primary text-[15px] font-semibold">
-                      <Shield size={16} /> Admin Dashboard
-                    </Link>
-                  </motion.div>
-                )}
-                {user?.role === 'editor' && (
-                  <motion.div key="admin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-                    <Link to="/admin/content" className="flex items-center gap-2 py-3 text-primary text-[15px] font-semibold">
-                      <Shield size={16} /> Content Manager
-                    </Link>
-                  </motion.div>
-                )}
-              </div>
-              <div className="px-6 py-6 border-t border-border bg-bg space-y-3 text-sm">
-                <a href={`tel:${phone}`} className="flex items-center gap-3 text-secondary font-semibold" aria-label={`Call us at ${phone}`}>
-                  <Phone size={17} aria-hidden="true" /> {phone}
-                </a>
-                <a href={`mailto:${email}`} className="flex items-center gap-3 text-text-light hover:text-secondary transition-colors break-all" aria-label={`Email ${email}`}>
-                  <Mail size={17} aria-hidden="true" /> {email}
-                </a>
-                <p className="flex items-center gap-3 text-text-light">
-                  <Clock size={17} aria-hidden="true" /> {hours}
-                </p>
-              </div>
-            </motion.nav>
-          </>
-        )}
-      </AnimatePresence>
+              {user?.role === 'admin' && (
+                <div key="admin">
+                  <Link to="/admin" className="flex items-center gap-2 py-3 text-primary text-[15px] font-semibold">
+                    <Shield size={16} /> Admin Dashboard
+                  </Link>
+                </div>
+              )}
+              {user?.role === 'editor' && (
+                <div key="editor">
+                  <Link to="/admin/content" className="flex items-center gap-2 py-3 text-primary text-[15px] font-semibold">
+                    <Shield size={16} /> Content Manager
+                  </Link>
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-6 border-t border-border bg-bg space-y-3 text-sm">
+              <a href={`tel:${phone}`} className="flex items-center gap-3 text-secondary font-semibold" aria-label={`Call us at ${phone}`}>
+                <Phone size={17} aria-hidden="true" /> {phone}
+              </a>
+              <a href={`mailto:${email}`} className="flex items-center gap-3 text-text-light hover:text-secondary transition-colors break-all" aria-label={`Email ${email}`}>
+                <Mail size={17} aria-hidden="true" /> {email}
+              </a>
+              <p className="flex items-center gap-3 text-text-light">
+                <Clock size={17} aria-hidden="true" /> {hours}
+              </p>
+            </div>
+          </nav>
+        </>
+      )}
     </>
   );
 }

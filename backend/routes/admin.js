@@ -13,6 +13,7 @@ import Document from '../models/Document.js';
 import { auth, adminOnly, editorOrAdmin } from '../middleware/auth.js';
 import { parsePagination } from '../utils/pagination.js';
 import CONTENT_REGISTRY, { sectionsFromRegistry, SECTION_LABELS } from '../data/content-registry.js';
+import { clearSiteCache } from '../utils/site-cache.js';
 
 const router = Router();
 
@@ -415,17 +416,20 @@ router.get('/banners', editorOrAdmin, asyncHandler(async (req, res) => {
 
 router.post('/banners', editorOrAdmin, asyncHandler(async (req, res) => {
   const banner = await Banner.create(req.body);
+  clearSiteCache();
   res.status(201).json({ success: true, data: banner });
 }));
 
 router.put('/banners/:id', editorOrAdmin, asyncHandler(async (req, res) => {
   const banner = await Banner.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
   if (!banner) return res.status(404).json({ success: false, message: 'Banner not found' });
+  clearSiteCache();
   res.json({ success: true, data: banner });
 }));
 
 router.delete('/banners/:id', editorOrAdmin, asyncHandler(async (req, res) => {
   await Banner.findByIdAndDelete(req.params.id);
+  clearSiteCache();
   res.json({ success: true, data: {} });
 }));
 
@@ -509,6 +513,7 @@ router.post('/content/seed', editorOrAdmin, asyncHandler(async (req, res) => {
     }
     keys.push(entry.key);
   }
+  clearSiteCache();
   res.json({ success: true, data: { created, updated, total: keys.length, keys } });
 }));
 
@@ -548,6 +553,7 @@ router.put('/content/:key', editorOrAdmin, asyncHandler(async (req, res) => {
     },
     { upsert: true, new: true, runValidators: true },
   );
+  clearSiteCache();
   res.json({ success: true, data: setting });
 }));
 
@@ -585,6 +591,7 @@ router.post('/content/bulk', editorOrAdmin, asyncHandler(async (req, res) => {
       { upsert: true, new: true },
     );
   }
+  clearSiteCache();
   res.json({ success: true, data: keys });
 }));
 
@@ -599,6 +606,7 @@ router.delete('/content/:key', adminOnly, asyncHandler(async (req, res) => {
       updatedByName: req.user.name,
     });
   }
+  clearSiteCache();
   res.json({ success: true, data: {} });
 }));
 
@@ -630,6 +638,7 @@ router.post('/content/:key/revert/:versionId', adminOnly, asyncHandler(async (re
     { $set: { value: version.value, lastUpdatedBy: req.user._id } },
     { upsert: true, new: true },
   );
+  clearSiteCache();
   res.json({ success: true, data: setting });
 }));
 
@@ -653,6 +662,7 @@ router.put('/settings/bulk', editorOrAdmin, asyncHandler(async (req, res) => {
       { upsert: true, new: true },
     );
   }
+  clearSiteCache();
   res.json({ success: true, data: keys });
 }));
 
@@ -669,11 +679,13 @@ router.put('/settings/:key', editorOrAdmin, asyncHandler(async (req, res) => {
     { $set: { value, type: type || 'text', group: group || 'general', label: label || req.params.key } },
     { upsert: true, new: true, runValidators: true },
   );
+  clearSiteCache();
   res.json({ success: true, data: setting });
 }));
 
 router.delete('/settings/:key', editorOrAdmin, asyncHandler(async (req, res) => {
   await Setting.findOneAndDelete({ key: req.params.key });
+  clearSiteCache();
   res.json({ success: true, data: {} });
 }));
 

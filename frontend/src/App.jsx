@@ -6,20 +6,20 @@ import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminLayout from './components/AdminLayout';
-import Home from './pages/Home';
-import Shop from './pages/Shop';
-import ProductDetail from './pages/ProductDetail';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Account from './pages/Account';
-import Contact from './pages/Contact';
-import About from './pages/About';
-import SizeGuide from './pages/SizeGuide';
-import OrderSuccess from './pages/OrderSuccess';
-import Blog from './pages/Blog';
-import BlogPost from './pages/BlogPost';
+const Home = lazy(() => import('./pages/Home'));
+const Shop = lazy(() => import('./pages/Shop'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Account = lazy(() => import('./pages/Account'));
+const Contact = lazy(() => import('./pages/Contact'));
+const About = lazy(() => import('./pages/About'));
+const SizeGuide = lazy(() => import('./pages/SizeGuide'));
+const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
+const Blog = lazy(() => import('./pages/Blog'));
+const BlogPost = lazy(() => import('./pages/BlogPost'));
 
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
 const AdminProducts = lazy(() => import('./pages/admin/Products'));
@@ -69,21 +69,21 @@ export default function App() {
       <Toaster position="top-center" toastOptions={{ duration: 3000, style: { borderRadius: '12px', padding: '16px', fontFamily: 'Inter, sans-serif' } }} />
       <main id="main-content" className="flex-1" role="main">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/product/:slug" element={<ProductDetail />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/account" element={<Account />} />
-          <Route path="/account/orders" element={<Account />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/size-guide" element={<SizeGuide />} />
-          <Route path="/order-success" element={<OrderSuccess />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/" element={withSuspense(<Home />)} />
+          <Route path="/shop" element={withSuspense(<Shop />)} />
+          <Route path="/product/:slug" element={withSuspense(<ProductDetail />)} />
+          <Route path="/cart" element={withSuspense(<Cart />)} />
+          <Route path="/checkout" element={withSuspense(<Checkout />)} />
+          <Route path="/login" element={withSuspense(<Login />)} />
+          <Route path="/register" element={withSuspense(<Register />)} />
+          <Route path="/account" element={withSuspense(<Account />)} />
+          <Route path="/account/orders" element={withSuspense(<Account />)} />
+          <Route path="/contact" element={withSuspense(<Contact />)} />
+          <Route path="/about" element={withSuspense(<About />)} />
+          <Route path="/size-guide" element={withSuspense(<SizeGuide />)} />
+          <Route path="/order-success" element={withSuspense(<OrderSuccess />)} />
+          <Route path="/blog" element={withSuspense(<Blog />)} />
+          <Route path="/blog/:slug" element={withSuspense(<BlogPost />)} />
 
           <Route path="/admin" element={adminShell(withSuspense(<AdminDashboard />))} />
           <Route path="/admin/products" element={adminShell(withSuspense(<AdminProducts />))} />
