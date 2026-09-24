@@ -9,11 +9,16 @@ export default function ProductImg({
   imgClassName,
   ...rest
 }) {
+  const fallbackSrc = product?.name
+    ? `https://placehold.co/600x800/${(variant?.colorHex || 'F8BBD0').replace('#', '')}/FFFFFF?text=${encodeURIComponent(product.name)}`
+    : '';
+
   const list = useMemo(() => {
     const own = variant?.images?.length ? variant.images : null;
     const pool = (own || (product?.variants || []).flatMap((v) => v.images || [])).filter(Boolean);
-    return [...new Set(pool)];
-  }, [variant, product]);
+    const unique = [...new Set(pool)];
+    return fallbackSrc && !unique.includes(fallbackSrc) ? [...unique, fallbackSrc] : unique;
+  }, [variant, product, fallbackSrc]);
 
   const [idx, setIdx] = useState(0);
   const src = list[idx];

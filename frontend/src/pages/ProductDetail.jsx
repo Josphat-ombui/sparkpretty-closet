@@ -69,12 +69,10 @@ export default function ProductDetail() {
 
   const variant = product.variants[selectedVariant];
   const allImages = [...new Set(product.variants.flatMap((v) => v.images).filter(Boolean))];
-  // Fallback: generate a placeholder image URL if product has no images
-  const hasImages = allImages.length > 0;
-  const fallbackImage = hasImages
-    ? null
-    : 'https://placehold.co/600x800/' + (product.variants[0]?.colorHex?.replace('#', '') || '888888') + '/FFFFFF?text=' + encodeURIComponent(product.name);
-  const allImagesWithFallback = hasImages ? allImages : [fallbackImage];
+  // Always keep a generated placeholder as the last image so the gallery
+  // never falls back to bare text when uploads are missing or fail to load
+  const fallbackImage = 'https://placehold.co/600x800/' + (product.variants[0]?.colorHex?.replace('#', '') || '888888') + '/FFFFFF?text=' + encodeURIComponent(product.name);
+  const allImagesWithFallback = allImages.length ? [...new Set([...allImages, fallbackImage])] : [fallbackImage];
   const uniqueColors = [...new Set(product.variants.map((v) => v.color))];
   const sizesForColor = product.variants.filter((v) => v.color === variant.color);
 
