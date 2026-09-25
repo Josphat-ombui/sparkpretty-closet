@@ -105,12 +105,14 @@ const cleanProductPayload = async (body, existing = {}) => {
     if (!size || !color) throw fail(`Variant ${i + 1}: size and color are required`);
     if (!(price > 0)) throw fail(`Variant ${i + 1}: price must be a positive number`);
 
-    const salePrice = (v.salePrice === undefined || v.salePrice === null || v.salePrice === '')
-      ? undefined
-      : Number(v.salePrice);
-    if (salePrice !== undefined) {
-      if (!(salePrice > 0)) throw fail(`Variant ${i + 1}: sale price must be a positive number`);
-      if (salePrice >= price) throw fail(`Variant ${i + 1}: sale price must be lower than the regular price`);
+    const rawSale = (v.salePrice === undefined || v.salePrice === null || v.salePrice === '') ? undefined : Number(v.salePrice);
+    let salePrice;
+    if (rawSale !== undefined) {
+      if (Number.isNaN(rawSale) || rawSale < 0) throw fail(`Variant ${i + 1}: sale price must be a positive number`);
+      salePrice = rawSale === 0 ? undefined : rawSale;
+      if (salePrice !== undefined && salePrice >= price) {
+        throw fail(`Variant ${i + 1}: sale price must be lower than the regular price`);
+      }
     }
 
     return {
