@@ -185,7 +185,7 @@ timestamps
 - `GET /stats` — dashboard totals (products, orders, users, blogs, subscribers, unread contacts, revenue, today orders, low stock)
 - `GET /analytics/sales?days=` — revenue + order count per day
 - `GET /analytics/top-products`, `GET /analytics/orders` — chart data
-- `GET/POST/PUT/DELETE /products`, `GET/POST/PUT/DELETE /products/:id` (search, category filter, pagination)
+- `GET/POST/PUT/PATCH/DELETE /products`, `GET/POST/PUT/DELETE /products/:id`, `GET /products/stats`, `POST /products/:id/duplicate`, `POST /products/bulk/delete`, `POST /products/bulk/status`, `PUT /products/bulk/category` (enterprise router in `adminProducts.js`; search by name/sku/tag/description, category + status + stock + featured filters, sortable, pagination; list items include `variantCount`, `totalStock`, `minPrice`, `maxPrice`, `coverImage`; create/update validated + slug-deduplicated)
 - `GET/POST/PUT/DELETE /categories`, `GET/POST/PUT/DELETE /categories/:id` (category list includes productCount)
 - `GET/POST/PUT/DELETE /orders`, `GET/POST/PUT/DELETE /orders/:id`, `PUT /orders/:id/status` (search by id/receipt, status filter, pagination; paid orders cannot be deleted)
 - `GET/POST/PUT/DELETE /blog`, `GET/POST/PUT/DELETE /blog/:id` (search, pagination)

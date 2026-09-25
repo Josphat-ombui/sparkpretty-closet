@@ -14,6 +14,7 @@ import { auth, adminOnly, editorOrAdmin } from '../middleware/auth.js';
 import { parsePagination } from '../utils/pagination.js';
 import CONTENT_REGISTRY, { sectionsFromRegistry, SECTION_LABELS } from '../data/content-registry.js';
 import { clearSiteCache } from '../utils/site-cache.js';
+import adminProductsRouter from './adminProducts.js';
 
 const router = Router();
 
@@ -177,45 +178,9 @@ router.delete('/users/:id', adminOnly, asyncHandler(async (req, res) => {
 }));
 
 // ============================================================
-// Products
+// Products (enterprise catalog API — see adminProducts.js)
 // ============================================================
-router.get('/products', adminOnly, asyncHandler(async (req, res) => {
-  const { page, limit, skip } = parsePagination(req.query);
-  const search = (req.query.search || '').toString().trim();
-  const category = (req.query.category || '').toString().trim();
-  const filter = {};
-  if (search) filter.$or = [{ name: new RegExp(search, 'i') }, { sku: new RegExp(search, 'i') }];
-  if (category) filter.category = category;
-
-  const [items, total] = await Promise.all([
-    Product.find(filter).populate('category').sort('-createdAt').skip(skip).limit(limit),
-    Product.countDocuments(filter),
-  ]);
-  res.json({ success: true, data: { items, total, page, pages: Math.ceil(total / limit) || 1, limit } });
-}));
-
-router.get('/products/:id', adminOnly, asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id).populate('category');
-  if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-  res.json({ success: true, data: product });
-}));
-
-router.post('/products', adminOnly, asyncHandler(async (req, res) => {
-  const product = await Product.create(req.body);
-  res.status(201).json({ success: true, data: product });
-}));
-
-router.put('/products/:id', adminOnly, asyncHandler(async (req, res) => {
-  if (req.body.slug) delete req.body.slug;
-  const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-  if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-  res.json({ success: true, data: product });
-}));
-
-router.delete('/products/:id', adminOnly, asyncHandler(async (req, res) => {
-  await Product.findByIdAndDelete(req.params.id);
-  res.json({ success: true, data: {} });
-}));
+router.use('/products', adminProductsRouter);
 
 // ============================================================
 // Categories

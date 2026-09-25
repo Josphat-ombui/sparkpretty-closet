@@ -23,6 +23,7 @@ const BlogPost = lazy(() => import('./pages/BlogPost'));
 
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
 const AdminProducts = lazy(() => import('./pages/admin/Products'));
+const ProductView = lazy(() => import('./pages/admin/ProductView'));
 const ProductForm = lazy(() => import('./pages/admin/ProductForm'));
 const AdminOrders = lazy(() => import('./pages/admin/Orders'));
 const AdminBlog = lazy(() => import('./pages/admin/BlogList'));
@@ -88,6 +89,7 @@ export default function App() {
           <Route path="/admin" element={adminShell(withSuspense(<AdminDashboard />))} />
           <Route path="/admin/products" element={adminShell(withSuspense(<AdminProducts />))} />
           <Route path="/admin/products/new" element={adminShell(withSuspense(<ProductForm />))} />
+          <Route path="/admin/products/:id" element={adminShell(withSuspense(<ProductView />))} />
           <Route path="/admin/products/:id/edit" element={adminShell(withSuspense(<ProductForm />))} />
           <Route path="/admin/categories" element={adminShell(withSuspense(<AdminCategories />))} />
           <Route path="/admin/orders" element={adminShell(withSuspense(<AdminOrders />))} />

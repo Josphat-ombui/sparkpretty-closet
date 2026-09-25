@@ -38,7 +38,7 @@ const productSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 productSchema.pre('save', function (next) {
-  if (this.isModified('name')) {
+  if (this.isModified('name') && !this.slug) {
     this.slug = slugify(this.name, { lower: true, strict: true });
   }
   next();
