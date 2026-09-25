@@ -35,7 +35,7 @@ app.use(mongoSanitize());
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 600,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later.' },
@@ -83,13 +83,21 @@ app.use('/', seoRoutes);
 
 app.get('/api/health', (_, res) => res.json({ ok: true }));
 
+// JSON 404 for unmatched API routes (no HTML fallthrough)
+app.use('/api', (req, res) => {
+  res.status(404).json({ success: false, message: 'Not found' });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   if (err.name === 'MulterError') {
     return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
   }
-  res.status(500).json({ success: false, message: err.message || 'Internal server error' });
+  if (err.status && [400, 401, 403, 404, 409, 429].includes(err.status)) {
+    return res.status(err.status).json({ success: false, message: err.message });
+  }
+  res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
 const start = async () => {

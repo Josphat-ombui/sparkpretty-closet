@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import { useContent } from '../context/ContentContext';
 import { formatPrice } from '../lib/api';
 import { Link } from 'react-router-dom';
+import ProductImg from './ProductImg';
 
 export default function CartDrawer() {
   const { items, isOpen, setIsOpen, updateItem, removeItem, subtotal, count } = useCart();
@@ -48,11 +49,19 @@ export default function CartDrawer() {
               <div className="space-y-4">
                 {items.map((item) => (
                   <div key={item._id} className="flex gap-4 p-4 bg-bg rounded-card">
-                    <div className="w-20 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-primary/10">
-                      <div className="w-full h-full flex items-center justify-center text-secondary text-xs font-medium">
-                        {item.color}
-                      </div>
-                    </div>
+                    <Link
+                      to={`/product/${item.product?.slug}`}
+                      onClick={() => setIsOpen(false)}
+                      className="w-20 h-24 rounded-lg overflow-hidden flex-shrink-0 relative bg-primary/5"
+                      aria-label={`View ${item.product?.name || 'product'}`}
+                    >
+                      <ProductImg
+                        product={item.product}
+                        variant={item.product?.variants?.[item.variantIndex] || item.product?.variants?.[0]}
+                        className="w-full h-full text-[9px] text-center p-1"
+                        imgClassName="w-full h-full object-cover"
+                      />
+                    </Link>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-sm truncate">{item.product?.name || 'Product'}</h4>
                       <p className="text-xs text-text-light mt-1">{item.size} / {item.color}</p>

@@ -49,11 +49,18 @@ export default function Footer() {
   ];
 
   const helpLinks = [
+    { to: '/shop?sort=newest', label: 'New Arrivals' },
+    { to: '/policies#privacy', label: 'Privacy Policy' },
+    { to: '/policies#terms', label: 'Terms of Service' },
     { to: '/size-guide', label: 'Size Guide' },
-    { to: '/contact', label: 'Contact Us' },
+  ];
+
+  const exploreLinks = [
+    { to: '/about', label: 'About Us' },
+    { to: '/blog', label: 'Journal' },
     { to: '/account', label: 'My Account' },
     { to: '/account/orders', label: 'Order History' },
-    { to: '/blog', label: 'Journal' },
+    { to: '/contact', label: 'Contact Us' },
   ];
 
   return (
@@ -135,9 +142,14 @@ export default function Footer() {
           </nav>
 
           <nav aria-label="Help links">
-            <h5 className="font-heading font-semibold text-sm uppercase tracking-[0.18em] mb-5 text-white/85">Explore</h5>
+            <h5 className="font-heading font-semibold text-sm uppercase tracking-[0.18em] mb-5 text-white/85">Help</h5>
             <ul className="space-y-3 text-sm text-white/60">
               {helpLinks.map((l) => (
+                <li key={l.label}>
+                  <Link to={l.to} className="hover:text-white hover:pl-1 transition-all">{l.label}</Link>
+                </li>
+              ))}
+              {exploreLinks.map((l) => (
                 <li key={l.label}>
                   <Link to={l.to} className="hover:text-white hover:pl-1 transition-all">{l.label}</Link>
                 </li>
@@ -188,8 +200,9 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-white/50">
           <p>&copy; {new Date().getFullYear()} {siteName}. All rights reserved.</p>
           <div className="flex items-center gap-6">
-            <Link to="/about" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link to="/about" className="hover:text-white transition-colors">Terms of Service</Link>
+            <Link to="/policies#privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link to="/policies#terms" className="hover:text-white transition-colors">Terms of Service</Link>
+            <Link to="/about" className="hidden sm:inline hover:text-white transition-colors">About</Link>
           </div>
         </div>
       </div>

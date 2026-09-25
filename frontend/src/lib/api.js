@@ -75,7 +75,11 @@ export const api = {
   delete: (path) => request(path, { method: 'DELETE' }),
 };
 
-export const formatPrice = (price) => `KSh ${Number(price).toLocaleString()}`;
+export const formatPrice = (price) => {
+  const n = Number(price);
+  if (!Number.isFinite(n)) return 'KSh 0';
+  return `KSh ${Math.round(n).toLocaleString('en-KE')}`;
+};
 
 export const generateSessionId = () => {
   let id = localStorage.getItem('sessionId');

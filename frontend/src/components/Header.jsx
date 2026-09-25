@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   ShoppingBag, User, Search, Menu, X, Phone, Palette, Mail,
   Clock, Instagram, Facebook, Twitter, Truck, Sparkles, Shield,
@@ -19,6 +19,7 @@ export default function Header() {
   const { user } = useAuth();
   const { theme, cycleTheme } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
   const { get } = useContent();
 
   useEffect(() => {
@@ -153,7 +154,7 @@ export default function Header() {
                 <input
                   type="text"
                   placeholder="Search..."
-                  onKeyDown={(e) => { if (e.key === 'Enter' && e.target.value.trim()) window.location.href = `/shop?search=${encodeURIComponent(e.target.value.trim())}`; }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && e.target.value.trim()) { navigate(`/shop?search=${encodeURIComponent(e.target.value.trim())}`); setSearchOpen(false); } }}
                   className="w-36 focus:w-52 bg-transparent py-2 pr-3 text-sm focus:outline-none transition-all duration-300 placeholder:text-text-muted"
                   aria-label="Search products"
                 />
@@ -223,7 +224,7 @@ export default function Header() {
         {searchOpen && (
           <div className="border-t border-border overflow-hidden bg-white" role="search" aria-label="Product search">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-              <form onSubmit={(e) => { e.preventDefault(); const q = e.target.search.value.trim(); if (q) window.location.href = `/shop?search=${encodeURIComponent(q)}`; }}>
+              <form onSubmit={(e) => { e.preventDefault(); const q = e.target.search.value.trim(); if (q) { navigate(`/shop?search=${encodeURIComponent(q)}`); setSearchOpen(false); } }}>
                 <label htmlFor="header-search" className="sr-only">Search products</label>
                 <input
                   id="header-search"

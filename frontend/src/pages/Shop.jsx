@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   SlidersHorizontal, X, ChevronDown, ChevronRight, Search,
-  ShoppingBag, Heart, Star, Eye, Minus, Plus, Shield,
+  ShoppingBag, Heart, Star, Eye, Shield,
   Truck, RotateCcw, Sparkles, Zap, Package,
 } from 'lucide-react';
 import { api, formatPrice } from '../lib/api';
@@ -11,6 +11,7 @@ import { useCart } from '../context/CartContext';
 import { useContent } from '../context/ContentContext';
 import SEO from '../components/SEO';
 import ProductImg from '../components/ProductImg';
+import QuickView from '../components/QuickView';
 import toast from 'react-hot-toast';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.4 } }) };
@@ -78,8 +79,6 @@ export default function Shop() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedPriceRange, setSelectedPriceRange] = useState(null);
-  const [qvVariant, setQvVariant] = useState(0);
-  const [qvQty, setQvQty] = useState(1);
   const { addItem } = useCart();
 
   const category = searchParams.get('category') || '';
@@ -154,20 +153,7 @@ export default function Shop() {
     toast.success(wishlist.includes(id) ? 'Removed from wishlist' : 'Added to wishlist');
   };
 
-  const openQuickView = (product) => {
-    setQuickView(product);
-    setQvVariant(0);
-    setQvQty(1);
-  };
-
-  const addFromQuickView = () => {
-    if (!quickView) return;
-    const v = quickView.variants[qvVariant];
-    if (v.stock < qvQty) return toast.error('Not enough stock');
-    addItem(quickView._id, qvVariant, qvQty);
-    toast.success(`${quickView.name} added to bag!`);
-    setQuickView(null);
-  };
+  const openQuickView = (product) => setQuickView(product);
 
   const getBadge = (product) => {
     const v = product.variants?.[0] || {};
@@ -612,12 +598,16 @@ export default function Shop() {
                               <h3 className="font-medium text-sm truncate group-hover:text-primary-dark transition-colors">{product.name}</h3>
                             </Link>
                             {/* Rating */}
-                            <div className="flex items-center gap-1 mt-1.5">
-                              {[...Array(5)].map((_, j) => (
-                                <Star key={j} size={11} className={j < 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'} />
-                              ))}
-                              <span className="text-xs text-text-muted ml-0.5">(4.{Math.floor(Math.random() * 5) + 3})</span>
-                            </div>
+                            {product.avgRating > 0 ? (
+                              <div className="flex items-center gap-1 mt-1.5">
+                                {[...Array(5)].map((_, j) => (
+                                  <Star key={j} size={11} className={j < Math.round(product.avgRating) ? 'text-warning fill-warning' : 'text-border'} />
+                                ))}
+                                <span className="text-xs text-text-muted ml-0.5">{product.avgRating} ({product.reviewCount})</span>
+                              </div>
+                            ) : (
+                              <div className="mt-1.5" />
+                            )}
                             {/* Price */}
                             <div className="flex items-center gap-2 mt-2">
                               <span className="font-bold text-text">{formatPrice(salePrice || price)}</span>
@@ -697,147 +687,7 @@ export default function Shop() {
       {/* ============================================
           QUICK VIEW MODAL
           ============================================ */}
-      <AnimatePresence>
-        {quickView && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50"
-              onClick={() => setQuickView(null)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-3xl md:max-h-[90vh] bg-white rounded-2xl z-50 overflow-y-auto shadow-modal"
-              role="dialog"
-              aria-label="Quick view"
-            >
-              <div className="p-6 md:p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-heading text-xl font-bold">Quick View</h2>
-                  <button onClick={() => setQuickView(null)} className="p-2 hover:bg-bg rounded-lg transition-colors" aria-label="Close">
-                    <X size={20} />
-                  </button>
-                </div>
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Image */}
-                  <div className="aspect-[3/4] bg-gradient-to-br from-primary/5 to-primary/10 rounded-card flex items-center justify-center text-primary/20 font-heading overflow-hidden">
-                    <ProductImg
-                      product={quickView}
-                      variant={quickView.variants?.[qvVariant]}
-                      eager
-                      className="w-full h-full text-sm"
-                      imgClassName="w-full h-full object-cover"
-                    />
-                  </div>
-                  {/* Info */}
-                  <div className="flex flex-col">
-                    <p className="text-xs text-text-muted uppercase tracking-wider mb-1">{quickView.category?.name || 'Product'}</p>
-                    <h3 className="font-heading text-2xl font-bold mb-2">{quickView.name}</h3>
-                    <div className="flex items-center gap-1 mb-3">
-                      {[...Array(5)].map((_, j) => <Star key={j} size={14} className="text-yellow-400 fill-yellow-400" />)}
-                      <span className="text-sm text-text-muted ml-1">(4.8)</span>
-                    </div>
-
-                    {/* Colors */}
-                    {quickView.variants && quickView.variants.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-sm font-semibold mb-2">Color: <span className="font-normal text-text-light">{quickView.variants[qvVariant]?.color}</span></p>
-                        <div className="flex gap-2">
-                          {[...new Set(quickView.variants.map((v) => v.color))].map((color) => {
-                            const v = quickView.variants.find((vv) => vv.color === color);
-                            const idx = quickView.variants.findIndex((vv) => vv.color === color);
-                            return (
-                              <button
-                                key={color}
-                                onClick={() => setQvVariant(idx)}
-                                className={`w-9 h-9 rounded-full border-2 transition-all ${quickView.variants[qvVariant]?.color === color ? 'border-primary scale-110' : 'border-border hover:border-primary/50'}`}
-                                style={{ backgroundColor: v?.colorHex || '#ccc' }}
-                                title={color}
-                              />
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Sizes */}
-                    <div className="mb-4">
-                      <p className="text-sm font-semibold mb-2">Size: <span className="font-normal text-text-light">{quickView.variants[qvVariant]?.size}</span></p>
-                      <div className="flex flex-wrap gap-2">
-                        {quickView.variants?.filter((v) => v.color === quickView.variants[qvVariant]?.color).map((v) => {
-                          const idx = quickView.variants.findIndex((vv) => vv.size === v.size && vv.color === v.color);
-                          return (
-                            <button
-                              key={v.size}
-                              onClick={() => setQvVariant(idx)}
-                              disabled={v.stock === 0}
-                              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                                quickView.variants[qvVariant]?.size === v.size
-                                  ? 'bg-secondary text-white border-primary'
-                                  : v.stock === 0
-                                    ? 'border-border text-text-muted line-through cursor-not-allowed'
-                                    : 'border-border hover:border-primary hover:text-primary-dark'
-                              }`}
-                            >
-                              {v.size}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Price */}
-                    <div className="mb-4">
-                      <span className="text-2xl font-bold text-text">{formatPrice(quickView.variants[qvVariant]?.salePrice || quickView.variants[qvVariant]?.price || 0)}</span>
-                      {quickView.variants[qvVariant]?.salePrice && (
-                        <span className="text-lg text-text-light line-through ml-2">{formatPrice(quickView.variants[qvVariant]?.price)}</span>
-                      )}
-                    </div>
-
-                    {/* Stock */}
-                    <p className="text-sm mb-4">
-                      {quickView.variants[qvVariant]?.stock > 10
-                        ? <span className="text-success font-medium">In Stock</span>
-                        : quickView.variants[qvVariant]?.stock > 0
-                          ? <span className="text-warning font-medium">Only {quickView.variants[qvVariant]?.stock} left</span>
-                          : <span className="text-error font-medium">Out of Stock</span>
-                      }
-                    </p>
-
-                    {/* Quantity + Add */}
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="flex items-center border border-border rounded-lg">
-                        <button onClick={() => setQvQty(Math.max(1, qvQty - 1))} className="p-2.5 hover:text-primary-dark transition-colors"><Minus size={14} /></button>
-                        <span className="w-10 text-center font-medium text-sm">{qvQty}</span>
-                        <button onClick={() => setQvQty(qvQty + 1)} className="p-2.5 hover:text-primary-dark transition-colors"><Plus size={14} /></button>
-                      </div>
-                      <button
-                        onClick={addFromQuickView}
-                        disabled={quickView.variants[qvVariant]?.stock === 0}
-                        className="flex-1 btn-primary py-3 flex items-center justify-center gap-2 disabled:opacity-50"
-                      >
-                        <ShoppingBag size={16} /> Add to Bag
-                      </button>
-                    </div>
-
-                    <Link
-                      to={`/product/${quickView.slug}`}
-                      onClick={() => setQuickView(null)}
-                      className="text-primary-dark text-sm font-semibold hover:underline text-center"
-                    >
-                      View Full Details →
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <QuickView product={quickView} onClose={() => setQuickView(null)} />
     </div>
   );
 }

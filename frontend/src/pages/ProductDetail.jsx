@@ -9,10 +9,12 @@ import { api, formatPrice } from '../lib/api';
 import { useCart } from '../context/CartContext';
 import { useContent } from '../context/ContentContext';
 import SEO from '../components/SEO';
-import ProductImg from '../components/ProductImg';
+import Reveal from '../components/Reveal';
 import toast from 'react-hot-toast';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { delay: 0.1, duration: 0.5 } };
+
+const placeholder = 'https://placehold.co/600x800/C2185B/FFFFFF?text=Sparkpretty';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -68,7 +70,10 @@ export default function ProductDetail() {
   if (!product) return <div className="section-padding text-center text-text-light">Product not found</div>;
 
   const variant = product.variants[selectedVariant];
-  const allImages = [...new Set(product.variants.flatMap((v) => v.images).filter(Boolean))];
+  // Order gallery so the selected colour's images lead the preview
+  const variantImages = (variant?.images || []).filter(Boolean);
+  const otherImages = [...new Set(product.variants.flatMap((v) => v.images).filter(Boolean))].filter((img) => !variantImages.includes(img));
+  const allImages = [...new Set([...variantImages, ...otherImages])];
   // Always keep a generated placeholder as the last image so the gallery
   // never falls back to bare text when uploads are missing or fail to load
   const fallbackImage = 'https://placehold.co/600x800/' + (product.variants[0]?.colorHex?.replace('#', '') || '888888') + '/FFFFFF?text=' + encodeURIComponent(product.name);
@@ -166,6 +171,16 @@ export default function ProductDetail() {
                 {zooming && (
                   <div className="absolute inset-0 border-2 border-primary/20 rounded-card pointer-events-none" />
                 )}
+                {variant.salePrice > 0 && (
+                  <span className="absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full bg-error text-white shadow-card">
+                    -{Math.round((1 - variant.salePrice / variant.price) * 100)}%
+                  </span>
+                )}
+                {visibleImages.length > 1 && (
+                  <span className="absolute top-3 right-3 text-xs font-semibold px-2 py-1 rounded-full bg-white/90 backdrop-blur-sm text-text-light">
+                    {safeIndex + 1} / {visibleImages.length}
+                  </span>
+                )}
                 {activeImage && (
                   <button
                     onClick={(e) => { e.stopPropagation(); activeImage && openLightbox(safeIndex); }}
@@ -222,9 +237,13 @@ export default function ProductDetail() {
               )}
             </motion.div>
 
-            {/* Product Info */}
-            <motion.div initial="hidden" animate="visible" variants={{ hidden: { opacity: 0, x: 20 }, visible: { opacity: 1, x: 0, transition: { delay: 0.15, duration: 0.5 } } }} className="flex flex-col">
-              <p className="text-sm text-text-muted uppercase tracking-wider mb-2">{product.category?.name}</p>
+            {/* Product Info — sticky buy box on desktop */}
+            <motion.div initial="hidden" animate="visible" variants={{ hidden: { opacity: 0, x: 20 }, visible: { opacity: 1, x: 0, transition: { delay: 0.15, duration: 0.5 } } }} className="flex flex-col lg:sticky lg:top-28 lg:self-start">
+              <p className="text-sm text-text-muted uppercase tracking-wider mb-2">
+                {product.category?.name ? (
+                  <Link to={`/shop?category=${product.category.slug}`} className="hover:text-primary-dark hover:underline">{product.category.name}</Link>
+                ) : 'Sparkpretty'}
+              </p>
               <div className="flex items-start justify-between gap-4 mb-2">
                 <h1 className="font-heading text-3xl md:text-4xl font-bold">{product.name}</h1>
                 <div className="flex gap-2">
@@ -433,32 +452,48 @@ export default function ProductDetail() {
           {/* Cross-Selling: Complete the Look */}
           {product.related?.length > 0 && (
             <div className="mt-16">
-              <h2 className="font-heading text-2xl md:text-3xl font-bold mb-2 text-center">Complete the Look</h2>
-              <p className="text-text-light text-center mb-8">Pairs well with this item</p>
+              <Reveal>
+                <div className="flex items-end justify-between mb-8">
+                  <div>
+                    <h2 className="font-heading text-2xl md:text-3xl font-bold">Complete the Look</h2>
+                    <p className="text-text-light mt-1">Pairs beautifully with this item</p>
+                  </div>
+                  <Link to="/shop" className="arrow-link text-secondary font-semibold text-sm">View all <span aria-hidden>→</span></Link>
+                </div>
+              </Reveal>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                {product.related.map((rel) => {
-                  const rv = rel.variants?.[0] || {};
-                  return (
-                    <Link to={`/product/${rel.slug}`} key={rel._id} className="group card p-0 overflow-hidden hover:shadow-card-hover transition-all">
+                {product.related.map((rel, i) => (
+                  <Reveal key={rel._id} delay={i * 60}>
+                    <Link to={`/product/${rel.slug}`} className="group card p-0 overflow-hidden hover:shadow-card-hover transition-all">
                       <div className="aspect-square bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">
-                        <ProductImg
-                          product={rel}
-                          variant={rv}
-                          eager
-                          className="w-full h-full text-xs"
-                          imgClassName="w-full h-full object-cover"
-                        />
+                        <div className="img-zoom w-full h-full">
+                          <img
+                            src={rel.coverImage || placeholder}
+                            alt={rel.name}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.currentTarget.src = placeholder; }}
+                          />
+                        </div>
+                        <span className="badge py-1 px-2.5 absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-text-light text-xs">{rel.tags?.[0]}</span>
                       </div>
                       <div className="p-3">
                         <h3 className="font-medium text-sm mb-1 group-hover:text-primary-dark transition-colors line-clamp-2">{rel.name}</h3>
+                        {rel.avgRating > 0 && (
+                          <div className="flex items-center gap-1 mb-1">
+                            <Star size={12} className="fill-warning text-warning" />
+                            <span className="text-xs text-text-light">{rel.avgRating}</span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm text-text">{formatPrice(rv.salePrice || rv.price)}</span>
-                          {rv.salePrice && <span className="text-xs text-text-light line-through">{formatPrice(rv.price)}</span>}
+                          <span className="font-bold text-sm text-text">{formatPrice(rel.minPrice)}</span>
+                          {rel.maxPrice > rel.minPrice && <span className="text-xs text-text-light">– {formatPrice(rel.maxPrice)}</span>}
                         </div>
                       </div>
                     </Link>
-                  );
-                })}
+                  </Reveal>
+                ))}
               </div>
             </div>
           )}

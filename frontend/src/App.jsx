@@ -20,6 +20,8 @@ const SizeGuide = lazy(() => import('./pages/SizeGuide'));
 const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
 const Blog = lazy(() => import('./pages/Blog'));
 const BlogPost = lazy(() => import('./pages/BlogPost'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const Policies = lazy(() => import('./pages/Policies'));
 
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
 const AdminProducts = lazy(() => import('./pages/admin/Products'));
@@ -82,6 +84,7 @@ export default function App() {
           <Route path="/contact" element={withSuspense(<Contact />)} />
           <Route path="/about" element={withSuspense(<About />)} />
           <Route path="/size-guide" element={withSuspense(<SizeGuide />)} />
+          <Route path="/policies" element={withSuspense(<Policies />)} />
           <Route path="/order-success" element={withSuspense(<OrderSuccess />)} />
           <Route path="/blog" element={withSuspense(<Blog />)} />
           <Route path="/blog/:slug" element={withSuspense(<BlogPost />)} />
@@ -115,6 +118,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="*" element={withSuspense(<NotFound />)} />
         </Routes>
       </main>
       <Footer />

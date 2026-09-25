@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { useContent } from '../context/ContentContext';
 import SEO from '../components/SEO';
 import ProductImg from '../components/ProductImg';
+import QuickView from '../components/QuickView';
 import toast from 'react-hot-toast';
 
 const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.6 } }) };
@@ -25,15 +26,6 @@ const categories = [
   { name: 'Bottoms', slug: 'bottoms', color: '#FFB6C1', desc: 'Jeans, skirts & trousers', image: '/images/bottoms-2.jpeg' },
   { name: 'Shoes', slug: 'shoes', color: '#FF8FA3', desc: 'Step out in style', image: '/images/shoes-6.jpeg' },
   { name: 'Accessories', slug: 'accessories', color: '#FFE0E6', desc: 'The finishing touches', image: '/images/accessories-1.jpeg' },
-];
-
-const colorSwatches = [
-  { color: '#FFB6C1', name: 'Rose' },
-  { color: '#FFB6C1', name: 'Sky' },
-  { color: '#1A1A2E', name: 'Black' },
-  { color: '#FFFFFF', name: 'White', border: true },
-  { color: '#8D6E63', name: 'Khaki' },
-  { color: '#7B1FA2', name: 'Purple' },
 ];
 
 const safeJSON = (val, fallback) => {
@@ -50,6 +42,7 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [wishlist, setWishlist] = useState([]);
+  const [quickView, setQuickView] = useState(null);
   const { addItem } = useCart();
   const { user } = useAuth();
   const { get } = useContent();
@@ -91,8 +84,8 @@ export default function Home() {
     }
   };
 
-  const nextTestimonial = () => setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-  const prevTestimonial = () => setActiveTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  const nextTestimonial = () => { if (!testimonials.length) return; setActiveTestimonial((prev) => (prev + 1) % testimonials.length); };
+  const prevTestimonial = () => { if (!testimonials.length) return; setActiveTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length); };
 
   const READING_TIME = (text) => Math.max(1, Math.ceil((text || '').split(/\s+/).length / 200));
 
@@ -239,8 +232,8 @@ export default function Home() {
                     <h3 className="font-heading text-xl font-bold group-hover:translate-x-1 transition-transform duration-300">{cat.name}</h3>
                     <p className="text-white/80 text-sm mt-1">{cat.desc}</p>
                   </div>
-                  <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <ArrowRight size={14} className="text-white" />
+                  <div className="absolute top-4 right-4 w-9 h-9 rounded-full bg-primary text-white shadow-button flex items-center justify-center opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-300">
+                    <ArrowRight size={15} />
                   </div>
                 </Link>
               </motion.div>
@@ -369,6 +362,21 @@ export default function Home() {
                         >
                           <Heart size={14} className={isWished ? 'text-error fill-error' : 'text-text-light'} />
                         </button>
+                        <div className="absolute bottom-3 left-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-10">
+                          <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickView(product); }}
+                            className="flex-1 bg-white/90 backdrop-blur-sm text-text text-xs font-semibold py-2 rounded-lg text-center hover:bg-white transition-colors flex items-center justify-center gap-1"
+                          >
+                            <Eye size={12} /> Quick View
+                          </button>
+                          <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!inStock) return toast.error('Out of stock'); addItem(product._id, 0); toast.success('Added!'); }}
+                            className="w-10 bg-secondary text-white rounded-lg flex items-center justify-center hover:bg-primary-dark transition-colors"
+                            aria-label="Add to bag"
+                          >
+                            <ShoppingBag size={14} />
+                          </button>
+                        </div>
                       </div>
                     </Link>
                     <div className="p-4">
@@ -378,9 +386,13 @@ export default function Home() {
                       <Link to={`/product/${product.slug}`}>
                         <h3 className="font-medium text-sm truncate group-hover:text-primary-dark transition-colors">{product.name}</h3>
                       </Link>
-                      <div className="flex items-center gap-1 mt-1">
-                        {[...Array(5)].map((_, j) => <Star key={j} size={11} className={j < 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'} />)}
-                        <span className="text-xs text-text-muted ml-1">(4.{i + 2})</span>
+                      <div className="flex items-center gap-1 mt-1.5">
+                        {Math.round(product.avgRating || 0) > 0 && (
+                          <>
+                            {[...Array(5)].map((_, j) => <Star key={j} size={11} className={j < Math.round(product.avgRating) ? 'text-warning fill-warning' : 'text-border'} />)}
+                            <span className="text-xs text-text-muted ml-1">{product.avgRating} ({product.reviewCount})</span>
+                          </>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 mt-2">
                         <span className="font-bold text-secondary">{formatPrice(salePrice || price)}</span>
@@ -511,12 +523,12 @@ export default function Home() {
                           </span>
                         )}
                         <div className="absolute bottom-3 left-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                          <Link
-                            to={`/product/${product.slug}`}
+                          <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setQuickView(product); }}
                             className="flex-1 bg-white/90 backdrop-blur-sm text-text text-xs font-semibold py-2 rounded-lg text-center hover:bg-white transition-colors flex items-center justify-center gap-1"
                           >
                             <Eye size={12} /> Quick View
-                          </Link>
+                          </button>
                           <button
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!inStock) return toast.error('Out of stock'); addItem(product._id, 0); toast.success('Added!'); }}
                             className="w-10 bg-secondary text-white rounded-lg flex items-center justify-center hover:bg-primary-dark transition-colors"
@@ -548,6 +560,9 @@ export default function Home() {
                   </motion.div>
                 );
               })}
+            </div>
+            <div className="mt-8 text-center">
+              <Link to="/shop?sort=newest" className="btn-outline inline-flex items-center gap-2">View All New Arrivals <ArrowRight size={16} /></Link>
             </div>
           </div>
         </section>
@@ -606,6 +621,7 @@ export default function Home() {
           </motion.div>
 
           {/* Featured Testimonial */}
+          {testimonials.length > 0 && (
           <div className="relative max-w-4xl mx-auto mb-12">
             <AnimatePresence mode="wait">
               <motion.div
@@ -663,6 +679,7 @@ export default function Home() {
               </button>
             </div>
           </div>
+          )}
 
           {/* Testimonial Cards Grid */}
           <div className="grid md:grid-cols-3 gap-6">
@@ -841,6 +858,8 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+
+      <QuickView product={quickView} onClose={() => setQuickView(null)} />
     </div>
   );
 }
