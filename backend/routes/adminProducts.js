@@ -216,9 +216,19 @@ router.get('/', asyncHandler(async (req, res) => {
   else if (stock === 'low') pipeline.push({ $match: { totalStock: { $lte: 5 } } });
   else if (stock === 'out') pipeline.push({ $match: { totalStock: { $lte: 0 } } });
 
-  const [items, total] = await Promise.all([
-    Product.aggregate([...pipeline, { $sort: SORTS[sort] }, { $skip: skip }, { $limit: limit }]),
-    Product.countDocuments(filter),
+  let total;
+  if (stock) {
+    const [countRes] = await Product.aggregate([...pipeline, { $count: 'total' }]);
+    total = countRes?.total || 0;
+  } else {
+    total = await Product.countDocuments(filter);
+  }
+
+  const items = await Product.aggregate([
+    ...pipeline,
+    { $sort: SORTS[sort] },
+    { $skip: skip },
+    { $limit: limit },
   ]);
 
   res.json({ success: true, data: { items, total, page, pages: Math.ceil(total / limit) || 1, limit } });
