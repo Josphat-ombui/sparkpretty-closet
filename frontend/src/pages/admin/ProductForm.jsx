@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ImagePlus, UploadCloud, Loader2, Check, X, Eye, EyeOff, Layers, FileText } from 'lucide-react';
-import { api, API } from '../../lib/api';
+import { ArrowLeft, Plus, Trash2, ImagePlus, UploadCloud, Loader2, Check, X, Eye, EyeOff, Layers, FileText, Link2, Search } from 'lucide-react';
+import { api, API, formatPrice } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/admin/ui.jsx';
 
@@ -67,6 +67,23 @@ export default function ProductForm() {
     metaTitle: '', metaDescription: '', variants: [{ ...emptyVariant }],
   });
   const [uploading, setUploading] = useState(new Set());
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [relQuery, setRelQuery] = useState('');
+  const [relResults, setRelResults] = useState([]);
+  const [relSearching, setRelSearching] = useState(false);
+  const [relFocused, setRelFocused] = useState(false);
+
+  useEffect(() => {
+    if (!relQuery.trim()) { setRelResults([]); return; }
+    const timer = setTimeout(() => {
+      setRelSearching(true);
+      api.get(`/admin/products?search=${encodeURIComponent(relQuery.trim())}&limit=6`)
+        .then((r) => setRelResults(r.data.items || []))
+        .catch(() => {})
+        .finally(() => setRelSearching(false));
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [relQuery]);
 
   useEffect(() => {
     api.get('/products/categories').then((r) => setCategories(r.data || [])).catch(() => {});
@@ -84,6 +101,7 @@ export default function ProductForm() {
               images: v.images || [],
             })),
           });
+          setRelatedProducts(p.relatedProducts || []);
         })
         .catch(() => toast.error('Failed to load product'))
         .finally(() => setFetching(false));
@@ -141,6 +159,24 @@ export default function ProductForm() {
   const addVariant = () => setForm({ ...form, variants: [...form.variants, { ...emptyVariant }] });
   const removeVariant = (i) => setForm({ ...form, variants: form.variants.filter((_, idx) => idx !== i) });
 
+  const normalizedRelResults = useMemo(() => {
+    const taken = new Set(relatedProducts.map((r) => String(r._id)));
+    if (isEdit) taken.add(id);
+    return relResults.filter((r) => !taken.has(String(r._id)));
+  }, [relResults, relatedProducts, isEdit, id]);
+
+  const addRelated = (item) => {
+    if (relatedProducts.some((r) => String(r._id) === String(item._id))) return;
+    if (isEdit && String(item._id) === String(id)) { toast.error('A product cannot link to itself'); return; }
+    setRelatedProducts((prev) => [...prev, {
+      _id: item._id, name: item.name, slug: item.slug,
+      coverImage: item.coverImage || null, active: item.active,
+    }]);
+    setRelQuery('');
+  };
+
+  const removeRelated = (rid) => setRelatedProducts((prev) => prev.filter((r) => String(r._id) !== String(rid)));
+
   const slugPreview = useMemo(() => (form.name || '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -186,6 +222,7 @@ export default function ProductForm() {
     const payload = {
       ...form,
       tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+      relatedProductIds: relatedProducts.map((r) => r._id),
       variants: form.variants.map((v) => ({
         ...v,
         price: Number(v.price),
@@ -365,6 +402,70 @@ export default function ProductForm() {
                 <p className="text-xs text-text-muted mt-1">{form.metaDescription?.length || 0}/160 characters recommended</p>
               </div>
             </Section>
+
+            {/* Related products */}
+            <Section step={4} title="Related products" subtitle="Products shown together on the store page as 'You may also like' — optional.">
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1.5">Search and add products</label>
+                <div className="relative">
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+                  <input
+                    className="input-field pl-9"
+                    value={relQuery}
+                    onChange={(e) => setRelQuery(e.target.value)}
+                    onFocus={() => setRelFocused(true)}
+                    onBlur={() => setTimeout(() => setRelFocused(false), 120)}
+                    placeholder="Type a product name to search…"
+                  />
+                  {relSearching && <Loader2 size={15} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-primary" />}
+                </div>
+
+                {relFocused && relQuery.trim() && (
+                  <div className="absolute z-20 left-0 right-0 mt-2 rounded-card border border-border bg-white shadow-modal overflow-hidden">
+                    {normalizedRelResults.length === 0 && !relSearching && (
+                      <p className="text-sm text-text-muted px-4 py-3">No new matches — try a different name.</p>
+                    )}
+                    {normalizedRelResults.map((item) => (
+                      <button
+                        key={item._id}
+                        type="button"
+                        onMouseDown={(e) => { e.preventDefault(); addRelated(item); }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-bg transition-colors"
+                      >
+                        <img
+                          src={item.coverImage || 'https://placehold.co/600x800/C2185B/FFFFFF?text=Product'}
+                          alt=""
+                          className="w-10 h-12 object-cover rounded-md border border-border bg-bg"
+                          loading="lazy"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-medium truncate">{item.name}</span>
+                          <span className="block text-xs text-text-muted">{item.category?.name || '—'} · {item.minPrice ? formatPrice(item.minPrice) : '—'}</span>
+                        </span>
+                        <span className="p-1.5 rounded-full bg-primary/10 text-primary shrink-0"><Plus size={14} /></span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {relatedProducts.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-text-muted mb-2 uppercase tracking-wide">Linked ({relatedProducts.length})</p>
+                  <div className="flex flex-wrap gap-2">
+                    {relatedProducts.map((r) => (
+                      <div key={r._id} className="flex items-center gap-2 pl-1.5 pr-2 py-1.5 rounded-full bg-bg border border-border">
+                        <img src={r.coverImage || 'https://placehold.co/600x800/C2185B/FFFFFF?text=Product'} alt="" className="w-7 h-9 object-cover rounded-full border border-border bg-bg" loading="lazy" />
+                        <span className="text-sm font-medium max-w-[180px] truncate">{r.name}</span>
+                        {r.active === false && <span className="text-[10px] font-semibold uppercase text-warning">Hidden</span>}
+                        <Link to={`/admin/products/${r._id}`} title="Open product" className="p-1 text-text-light hover:text-primary transition-colors"><Link2 size={13} /></Link>
+                        <button type="button" onClick={() => removeRelated(r._id)} className="p-1 text-text-light hover:text-error transition-colors" title="Remove"><X size={14} /></button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Section>
           </div>
 
           {/* Right rail */}
@@ -382,6 +483,7 @@ export default function ProductForm() {
                 { label: 'Variants', value: summary.variantCount },
                 { label: 'Units in stock', value: summary.totalStock },
                 { label: 'Price range', value: summary.minPrice ? `KSh ${summary.minPrice.toLocaleString()}${summary.maxPrice !== summary.minPrice ? `–${summary.maxPrice.toLocaleString()}` : ''}` : '—' },
+                { label: 'Related products', value: relatedProducts.length },
                 { label: 'Status', value: form.active ? 'Active' : 'Inactive' },
               ].map((row) => (
                 <div key={row.label} className="flex justify-between text-sm">

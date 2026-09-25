@@ -285,7 +285,9 @@ router.put('/bulk/category', asyncHandler(async (req, res) => {
 // ============================================================
 router.get('/:id', asyncHandler(async (req, res) => {
   if (!/^[0-9a-fA-F]{24}$/.test(req.params.id)) throw fail('Product not found', 404);
-  const product = await Product.findById(req.params.id).populate('category');
+  const product = await Product.findById(req.params.id)
+    .populate('category')
+    .populate({ path: 'relatedProductIds', select: 'name slug active variants' });
   if (!product) throw fail('Product not found', 404);
   const o = product.toObject();
   const variants = o.variants || [];
@@ -300,6 +302,14 @@ router.get('/:id', asyncHandler(async (req, res) => {
   o.ratingData = o.reviews && o.reviews.length
     ? { avgRating: (o.reviews.reduce((s, r) => s + r.rating, 0) / o.reviews.length).toFixed(1), reviewCount: o.reviews.length }
     : { avgRating: 0, reviewCount: 0 };
+  o.relatedProducts = (o.relatedProductIds || []).map((r) => ({
+    _id: r._id,
+    name: r.name,
+    slug: r.slug,
+    active: r.active,
+    coverImage: (r.variants && r.variants[0] && r.variants[0].images && r.variants[0].images[0]) || null,
+  }));
+  delete o.relatedProductIds;
   res.json({ success: true, data: o });
 }));
 

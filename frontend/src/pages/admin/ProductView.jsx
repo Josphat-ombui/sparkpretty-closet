@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Pencil, Copy, Trash2, ExternalLink, Star, Tag, Layers,
-  ShieldCheck, AlertTriangle, PackageOpen,
+  ShieldCheck, AlertTriangle, PackageOpen, Link2,
 } from 'lucide-react';
 import { api, formatPrice } from '../../lib/api';
 import toast from 'react-hot-toast';
@@ -245,6 +245,44 @@ export default function ProductView() {
                 ? <span className="inline-flex items-center gap-1 text-success"><ShieldCheck size={12} /> Full SEO metadata present</span>
                 : <span className="inline-flex items-center gap-1 text-warning"><AlertTriangle size={12} /> Missing meta title/description</span>}
             </p>
+          </div>
+
+          {/* Related products */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-heading text-lg font-semibold">Related products</h2>
+              <Link to={`/admin/products/${product._id}/edit`} className="text-xs text-secondary font-semibold hover:underline">Manage</Link>
+            </div>
+            {product.relatedProducts && product.relatedProducts.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {product.relatedProducts.map((r) => (
+                  <Link
+                    key={r._id}
+                    to={`/admin/products/${r._id}`}
+                    className="flex items-center gap-2.5 p-2 rounded-card border border-border hover:border-primary/50 hover:shadow-card transition-all group"
+                  >
+                    <img
+                      src={r.coverImage || 'https://placehold.co/600x800/C2185B/FFFFFF?text=Product'}
+                      alt={r.name}
+                      className="w-12 h-14 object-cover rounded-md border border-border bg-bg shrink-0"
+                      loading="lazy"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium truncate group-hover:text-primary transition-colors">{r.name}</span>
+                      <span className="block text-xs text-text-muted mt-0.5 flex items-center gap-1">
+                        {r.active === false && <span className="text-[10px] font-semibold uppercase text-warning">Hidden</span>}
+                        {r.active !== false && <Link2 size={11} className="shrink-0" />}
+                      </span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 text-sm text-text-muted">
+                <Link2 size={18} className="shrink-0" />
+                <span>No related products yet. <Link to={`/admin/products/${product._id}/edit`} className="text-secondary font-semibold hover:underline">Add some in the editor</Link>.</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
